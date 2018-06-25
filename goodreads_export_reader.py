@@ -12,7 +12,7 @@ import pdb
 import re
 
 TEST_FILE = os.path.join('/', 'home', 'john', 'Downloads',
-                         'goodreads_library_export_20180214.csv')
+                         'goodreads_library_export_20180622.csv')
 
 def date_from_string(ds):
     if ds:
@@ -50,7 +50,10 @@ class Book(object):
         # Reader specific stuff
         self.status = row_dict['Exclusive Shelf']
         self.raw_shelves = row_dict['Bookshelves']
-        self.rating = row_dict['My Rating']
+        self.rating = int(row_dict['My Rating'])
+        if self.rating == '0':
+            self.rating = None
+
         self.date_read = date_from_string(row_dict['Date Read'])
         self.read_count = int(row_dict['Read Count'])
         if self.read_count > 0 and not self.date_read:
@@ -93,7 +96,13 @@ class Book(object):
 
     @property
     def shelves(self):
-        return [s.strip() for s in self.raw_shelves]
+        if not self.raw_shelves:
+            logging.warning('%s is not shelved anywhere' % (self.title))
+            return []
+        else:
+            s = re.split('[, ]+', self.raw_shelves)
+            return s
+        # return [s.strip() for s in self.raw_shelves]
 
     def __repr__(self):
         return "'%s' by %s, %s" % (self.title, self.author, self.status)
@@ -102,10 +111,11 @@ class Book(object):
 def read_file(filename):
     with open(filename) as csvfile:
         reader = csv.DictReader(csvfile)
-        for row in reader:
+        for line_num, row in enumerate(reader):
             try:
                 yield Book(row)
             except Exception as err:
+                logging.error('Blew up on line %d: %s' % (line_num, err))
                 pdb.set_trace()
 
 
