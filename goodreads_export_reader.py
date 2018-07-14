@@ -12,7 +12,7 @@ import pdb
 import re
 
 TEST_FILE = os.path.join('/', 'home', 'john', 'Downloads',
-                         'goodreads_library_export_20180622.csv')
+                         'goodreads_library_export_latest.csv')
 
 def date_from_string(ds):
     if ds:
