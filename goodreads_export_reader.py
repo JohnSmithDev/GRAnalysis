@@ -37,7 +37,12 @@ class Book(object):
         # Edition specific stuff
         self.publisher = row_dict['Publisher']
         self.year_published = nullable_int(row_dict['Year Published'])
-        self.pagination = row_dict['Number of Pages']
+        try:
+            self.pagination = int(row_dict['Number of Pages'])
+        except ValueError as err:
+            logging.warning('%s does not have a valid pagination (%s)' %
+                            (self.title, row_dict['Number of Pages']))
+            self.pagination = None
         self.format = row_dict['Binding']
 
         # Goodreads stuff
@@ -87,12 +92,16 @@ class Book(object):
 
     @property
     def year(self):
-        if self.originally_published:
-            return self.originally_published
+        if self.originally_published_year:
+            return self.originally_published_year
         elif self.year_published:
             return self.year_published
         else:
             return None
+
+    @property
+    def decade(self):
+        return [str(self.year)[:3] + '0s']
 
     @property
     def shelves(self):
@@ -115,7 +124,7 @@ def read_file(filename):
             try:
                 yield Book(row)
             except Exception as err:
-                logging.error('Blew up on line %d: %s' % (line_num, err))
+                logging.error('Blew up on line %d: %s/%s' % (line_num, err, type(err)))
                 pdb.set_trace()
 
 
