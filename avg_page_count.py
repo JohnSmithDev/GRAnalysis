@@ -47,7 +47,7 @@ if __name__ == '__main__':
     print()
 
     def by_decade(book):
-        return book.decade
+        return [book.decade]
 
     for k, v, c in sorted(calculate_average_page_counts(TEST_FILE, by_decade),
                        key=lambda z: z[0]):

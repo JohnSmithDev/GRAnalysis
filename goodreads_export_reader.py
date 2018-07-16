@@ -101,7 +101,7 @@ class Book(object):
 
     @property
     def decade(self):
-        return [str(self.year)[:3] + '0s']
+        return str(self.year)[:3] + '0s'
 
     @property
     def shelves(self):
@@ -113,8 +113,16 @@ class Book(object):
             return s
         # return [s.strip() for s in self.raw_shelves]
 
+    @property
+    def goodreads_url(self):
+        return 'https://www.goodreads.com/book/show/%d' % (self.book_id)
+
+
     def __repr__(self):
-        return "'%s' by %s, %s" % (self.title, self.author, self.status)
+        # use square parens to make it easier to distinguish from a series
+        # reference in the title
+        return "'%s' by %s [%s], %s" % (self.title, self.author, self.year,
+                                        self.status)
 
 
 def read_file(filename):
