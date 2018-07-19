@@ -9,48 +9,98 @@ from collections import defaultdict, Counter
 from functools import cmp_to_key
 import logging
 import pdb
+# from statistics import stdev # Python 3.4+ (apparently)
 import sys
 
-from goodreads_export_reader import TEST_FILE, read_file
 
-def calculate_average_page_counts(file, keys_func=None):
-    ROGUE_KEY = '*Bad/missing pagination*'
+from utils.export_reader import TEST_FILE, read_file
+
+def calculate_average_metric(file, keys_func, metric,
+                             inclusive_filters=None,
+                             exclusive_filters=None):
+    """
+    Calculate the average value of a particular metric (currently either
+    pagination or rating), grouped by a particular key/dimension, optionally
+    including or excluding particular books.
+    * keys_func is either the name of a property to group by, or a function
+      that takes a Book object as an argument and returns some value derived
+      from it.  Note that these can either be scalar values or iterables,
+      in the latter case all values in the iterable will be incremented
+      accordingly (e.g. a list of shelves a book is on)
+    """
+    ROGUE_KEY = '*Bad/missing %s*' % (metric)
 
     book_count = defaultdict(int)
-    page_count = defaultdict(int)
+    metric_count = defaultdict(int)
     for book in read_file(TEST_FILE):
-        pg = book.pagination
-        keys = keys_func(book)
-        if pg is not None: # Ignore books with no pagination value
-            for subkey in keys:
-                book_count[subkey] += 1
-                page_count[subkey] += pg
+        if inclusive_filters:
+            unwanted = False
+            for filter_func in inclusive_filters:
+                if not filter_func(book):
+                    unwanted = True
+                    break
+            if unwanted:
+                continue
+        if exclusive_filters:
+            wanted = True
+            for filter_func in exclusive_filters:
+                if filter_func(book):
+                    wanted = False
+                    break
+            if not wanted:
+                continue
+
+        val = getattr(book, metric)
+
+        try:
+            # Try keys_func as a property of a book object
+            keys = getattr(book, keys_func)
+        except TypeError:
+            # Otherwise assume it's a function
+            keys = keys_func(book)
+        if val is not None: # Ignore books with no/undefined value
+            try:
+                book_count[keys] += 1
+                metric_count[keys] += val
+            except TypeError:
+                # Assume a list (or iterable) of keys
+                for subkey in keys:
+                    book_count[subkey] += 1
+                    metric_count[subkey] += val
         else:
             book_count[ROGUE_KEY] += 1
-            page_count[ROGUE_KEY] += 0
+            metric_count[ROGUE_KEY] += 0
     avgs = []
-    for k, numerator in page_count.items():
-        avgs.append((k,  int(numerator / book_count[k]), book_count[k]))
+    for k, numerator in metric_count.items():
+        avgs.append((k,  numerator / book_count[k], book_count[k]))
 
     return avgs
+
+### A couple of convenience wrappers follow - these are probably the
+### only useful variants you'd actually want to use, unless you need extra
+### filtering
+
+def calculate_average_pagination(filename, grouping):
+    return calculate_average_metric(filename, grouping, 'pagination')
+
+def calculate_average_rating(filename, grouping):
+    def is_read(book):
+        return book.status == 'read'
+    return calculate_average_metric(filename, grouping, 'rating',
+                                    inclusive_filters=[is_read])
+
 
 
 if __name__ == '__main__':
 
-    def by_shelves(book):
-        return book.shelves
-
-    for k, v, c in sorted(calculate_average_page_counts(TEST_FILE, by_shelves),
-                       key=lambda z: -z[1]):
+    for k, v, c in sorted(calculate_average_pagination(TEST_FILE, 'shelves'),
+                          key=lambda z: -z[1]):
         print('%-30s: %5d (%d)' % (k, v, c))
 
     print()
 
-    def by_decade(book):
-        return [book.decade]
-
-    for k, v, c in sorted(calculate_average_page_counts(TEST_FILE, by_decade),
-                       key=lambda z: z[0]):
-        print('%-30s: %5d (%d)' % (k, v, c))
+    for k, v, c in sorted(calculate_average_rating(TEST_FILE, 'decade'),
+                          key=lambda z: z[0]):
+        print('%-30s: %.2f (%d)' % (k, v, c))
 
 

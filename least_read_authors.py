@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Show which authors are least read (in terms of books read/books owned)
 """
@@ -6,14 +6,17 @@ Show which authors are least read (in terms of books read/books owned)
 from __future__ import division
 
 from collections import defaultdict
+from functools import cmp_to_key
 import logging
 import pdb
 
-from goodreads_export_reader import TEST_FILE, read_file
+from utils.export_reader import TEST_FILE, read_file
 
 
 
 if __name__ == '__main__':
+    IGNORE_SINGLE_BOOK_AUTHORS = True
+
     # Would be nice to use counters, but I dunno if that's possible for two
     # counters and a generator?
     unread_count = defaultdict(int)
@@ -30,6 +33,8 @@ if __name__ == '__main__':
     for author in author_count:
         rd = read_count[author]
         ur = unread_count[author]
+        if IGNORE_SINGLE_BOOK_AUTHORS and (rd + ur) == 1:
+            continue
         # print('%-30s : %5d%% %3d' % (author, read_count[author], unread_count[author]))
         try:
             author_stats.append((author, int(100 * (rd / (rd+ur))) , rd - ur))
@@ -47,6 +52,6 @@ if __name__ == '__main__':
             return a[1] - b[1]
 
 
-    for stat in sorted(author_stats, cmp=comparator):
+    for stat in sorted(author_stats, key=cmp_to_key(comparator)):
         print('%-30s : %5d%% %3d %3d' % (stat[0], stat[1], stat[2], author_count[stat[0]]))
 

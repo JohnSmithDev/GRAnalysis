@@ -14,6 +14,9 @@ import re
 TEST_FILE = os.path.join('/', 'home', 'john', 'Downloads',
                          'goodreads_library_export_latest.csv')
 
+
+TODAY = date.today() # Assumption: anything using this lib will never run over multiple days
+
 def date_from_string(ds):
     if ds:
         dbits = [int(z) for z in ds.split('/')]
@@ -59,6 +62,7 @@ class Book(object):
         if self.rating == '0':
             self.rating = None
 
+        self.date_added = date_from_string(row_dict['Date Added'])
         self.date_read = date_from_string(row_dict['Date Read'])
         self.read_count = int(row_dict['Read Count'])
         if self.read_count > 0 and not self.date_read:
@@ -72,6 +76,15 @@ class Book(object):
                 # fixed
                 logging.warning('%s has been read %d times, but no read date (%s)' %
                                 (self.title, self.read_count, self.status))
+
+    @property
+    def is_read(self):
+        return self.status == 'read'
+
+    @property
+    def is_unread(self):
+        # Note that this excludes currently read books
+        return self.status == 'to-read'
 
 
     @property
@@ -104,6 +117,27 @@ class Book(object):
         return str(self.year)[:3] + '0s'
 
     @property
+    def days_on_tbr_pile(self):
+      try:
+        if self.is_read:
+            if not self.date_added or not self.date_read:
+                raise ValueError('%s is read, but has missing add or read date' %
+                                 (self.title))
+            days = (self.date_read - self.date_added).days
+            if days < 0:
+                raise ValueError('%s has read date before add date' %
+                                 (self.title))
+            return days
+        else:
+            if not self.date_added or \
+               (self.date_added > TODAY): # Q: Can this ever happen?
+                raise ValueError('%s is read, but has missing or future add date' %
+                                 (self.title))
+            return (TODAY - self.date_added).days
+      except TypeError as err:
+          pdb.set_trace()
+
+    @property
     def shelves(self):
         if not self.raw_shelves:
             logging.warning('%s is not shelved anywhere' % (self.title))
@@ -124,13 +158,28 @@ class Book(object):
         return "'%s' by %s [%s], %s" % (self.title, self.author, self.year,
                                         self.status)
 
+### Some commonly used filters for use with read_files()
+def only_read_books(bk):
+    return bk.is_read
+def only_unread_books(bk):
+    return bk.is_unread
 
-def read_file(filename):
+
+
+def read_file(filename, filter_funcs=None):
     with open(filename) as csvfile:
         reader = csv.DictReader(csvfile)
         for line_num, row in enumerate(reader):
             try:
-                yield Book(row)
+                bk = Book(row)
+                wanted = True
+                if filter_funcs:
+                    for fn in filter_funcs:
+                        if not fn(bk):
+                            wanted = False
+                            break
+                if wanted:
+                    yield bk
             except Exception as err:
                 logging.error('Blew up on line %d: %s/%s' % (line_num, err, type(err)))
                 pdb.set_trace()

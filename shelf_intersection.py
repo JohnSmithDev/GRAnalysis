@@ -17,7 +17,7 @@ import logging
 import pdb
 import sys
 
-from goodreads_export_reader import TEST_FILE, read_file
+from utils.export_reader import TEST_FILE, read_file
 
 def split_filters(shelves):
     """
