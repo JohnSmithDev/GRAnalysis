@@ -43,7 +43,7 @@ if __name__ == '__main__':
 
     print()
 
-    print('== Unead books ==')
+    print('== Unread books ==')
     unread_books = sorted(read_file(TEST_FILE,
                                     filter_funcs=[only_unread_books]),
                           key=cmp_to_key(comparator))

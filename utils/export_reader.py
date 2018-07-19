@@ -14,8 +14,9 @@ import re
 TEST_FILE = os.path.join('/', 'home', 'john', 'Downloads',
                          'goodreads_library_export_latest.csv')
 
-
 TODAY = date.today() # Assumption: anything using this lib will never run over multiple days
+
+er_logger = logging.getLogger('export_reader')
 
 def date_from_string(ds):
     if ds:
@@ -43,7 +44,7 @@ class Book(object):
         try:
             self.pagination = int(row_dict['Number of Pages'])
         except ValueError as err:
-            logging.warning('%s does not have a valid pagination (%s)' %
+            self._warn('%s does not have a valid pagination (%s)' %
                             (self.title, row_dict['Number of Pages']))
             self.pagination = None
         self.format = row_dict['Binding']
@@ -69,13 +70,16 @@ class Book(object):
             if self.status == 'currently-reading':
                 pass # This is ignorable
             elif self.status == 'to-read':
-                logging.warning('%s is marked as to-read, but has been read %d times' %
+                self._warn('%s is marked as to-read, but has been read %d times' %
                                 (self.title, self.read_count))
             else:
                 # Hmm, this seems to show entries that have been subsequently
                 # fixed
-                logging.warning('%s has been read %d times, but no read date (%s)' %
+                self._warn('%s has been read %d times, but no read date (%s)' %
                                 (self.title, self.read_count, self.status))
+
+    def _warn(self, msg):
+        er_logger.warning(msg)
 
     @property
     def is_read(self):
@@ -140,7 +144,7 @@ class Book(object):
     @property
     def shelves(self):
         if not self.raw_shelves:
-            logging.warning('%s is not shelved anywhere' % (self.title))
+            self._warn('%s is not shelved anywhere' % (self.title))
             return []
         else:
             s = re.split('[, ]+', self.raw_shelves)
@@ -166,7 +170,8 @@ def only_unread_books(bk):
 
 
 
-def read_file(filename, filter_funcs=None):
+def read_file(filename, filter_funcs=None, logging_level=logging.ERROR):
+    er_logger.setLevel(logging_level)
     with open(filename) as csvfile:
         reader = csv.DictReader(csvfile)
         for line_num, row in enumerate(reader):
