@@ -93,14 +93,16 @@ def calculate_average_rating(filename, grouping):
 
 if __name__ == '__main__':
 
+    print('== Average page count by shelf ==')
     for k, v, c in sorted(calculate_average_pagination(TEST_FILE, 'shelves'),
                           key=lambda z: -z[1]):
         print('%-30s: %5d (%d)' % (k, v, c))
 
     print()
 
-    for k, v, c in sorted(calculate_average_rating(TEST_FILE, 'decade'),
+    print('== Average page count by decade ==')
+    for k, v, c in sorted(calculate_average_pagination(TEST_FILE, 'decade'),
                           key=lambda z: z[0]):
-        print('%-30s: %.2f (%d)' % (k, v, c))
+        print('%-30s: %5d (%d)' % (k, v, c))
 
 
