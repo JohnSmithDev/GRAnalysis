@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Library to read the CSV export that GoodReads makes available
 """
@@ -10,13 +10,18 @@ import logging
 import os
 import pdb
 import re
+import sys
 
 TEST_FILE = os.path.join('/', 'home', 'john', 'Downloads',
                          'goodreads_library_export_latest.csv')
 
 TODAY = date.today() # Assumption: anything using this lib will never run over multiple days
 
-er_logger = logging.getLogger('export_reader')
+# Q: Does this affect logging behaviour in other modules?  (I tried setting
+# up a custom logger, but it was ****ing me around, and I couldn't be ****d
+# to fix it properly)
+logging.getLogger().setLevel(logging.ERROR)
+
 
 def date_from_string(ds):
     if ds:
@@ -58,7 +63,7 @@ class Book(object):
 
         # Reader specific stuff
         self.status = row_dict['Exclusive Shelf']
-        self.raw_shelves = row_dict['Bookshelves']
+        self._raw_shelves = row_dict['Bookshelves']
         self.rating = int(row_dict['My Rating'])
         if self.rating == '0':
             self.rating = None
@@ -79,7 +84,7 @@ class Book(object):
                                 (self.title, self.read_count, self.status))
 
     def _warn(self, msg):
-        er_logger.warning(msg)
+        logging.warning(msg)
 
     @property
     def is_read(self):
@@ -143,13 +148,17 @@ class Book(object):
 
     @property
     def shelves(self):
-        if not self.raw_shelves:
+        if not self._raw_shelves:
             self._warn('%s is not shelved anywhere' % (self.title))
             return []
         else:
-            s = re.split('[, ]+', self.raw_shelves)
+            s = re.split('[, ]+', self._raw_shelves)
+            # There seems to be a bug in the exported data, whereby 'to-read'
+            # and 'currently-reading' are in the shelves column, but 'read'
+            # isn't - so we patch it here
+            if self.is_read and 'read' not in s:
+                s.append('read')
             return s
-        # return [s.strip() for s in self.raw_shelves]
 
     @property
     def goodreads_url(self):
@@ -168,10 +177,9 @@ def only_read_books(bk):
 def only_unread_books(bk):
     return bk.is_unread
 
-
-
-def read_file(filename, filter_funcs=None, logging_level=logging.ERROR):
-    er_logger.setLevel(logging_level)
+def read_file(filename, filter_funcs=None):
+    # pdb.set_trace()
+    # er_logger.basicConfig(format='XXXX %(levelname)s:%(message)s', level=logging.DEBUG)
     with open(filename) as csvfile:
         reader = csv.DictReader(csvfile)
         for line_num, row in enumerate(reader):
@@ -191,6 +199,8 @@ def read_file(filename, filter_funcs=None, logging_level=logging.ERROR):
 
 
 if __name__ == '__main__':
+    logging.getLogger().setLevel(logging.WARNING)
+
     for b in read_file(TEST_FILE):
         print(b)
 
