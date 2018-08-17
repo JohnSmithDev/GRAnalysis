@@ -148,17 +148,18 @@ class Book(object):
 
     @property
     def shelves(self):
+        s = []
         if not self._raw_shelves:
             self._warn('%s is not shelved anywhere' % (self.title))
-            return []
         else:
             s = re.split('[, ]+', self._raw_shelves)
-            # There seems to be a bug in the exported data, whereby 'to-read'
-            # and 'currently-reading' are in the shelves column, but 'read'
-            # isn't - so we patch it here
-            if self.is_read and 'read' not in s:
-                s.append('read')
-            return s
+
+        # There seems to be a bug in the exported data, whereby 'to-read'
+        # and 'currently-reading' are in the shelves column, but 'read'
+        # isn't - so we patch it here
+        if self.is_read and 'read' not in s:
+            s.append('read')
+        return s
 
     @property
     def goodreads_url(self):
