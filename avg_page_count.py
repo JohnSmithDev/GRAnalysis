@@ -13,15 +13,13 @@ import pdb
 import sys
 
 
-from utils.export_reader import TEST_FILE, read_file
+from utils.export_reader import TEST_FILE, read_file, only_read_and_rated_books
 
-def calculate_average_metric(file, keys_func, metric,
-                             inclusive_filters=None,
-                             exclusive_filters=None):
+def calculate_average_metric(books, keys_func, metric,
+                             include_missing_pagination=True):
     """
     Calculate the average value of a particular metric (currently either
-    pagination or rating), grouped by a particular key/dimension, optionally
-    including or excluding particular books.
+    pagination or rating), grouped by a particular key/dimension.
     * keys_func is either the name of a property to group by, or a function
       that takes a Book object as an argument and returns some value derived
       from it.  Note that these can either be scalar values or iterables,
@@ -32,24 +30,8 @@ def calculate_average_metric(file, keys_func, metric,
 
     book_count = defaultdict(int)
     metric_count = defaultdict(int)
-    for book in read_file(TEST_FILE):
-        if inclusive_filters:
-            unwanted = False
-            for filter_func in inclusive_filters:
-                if not filter_func(book):
-                    unwanted = True
-                    break
-            if unwanted:
-                continue
-        if exclusive_filters:
-            wanted = True
-            for filter_func in exclusive_filters:
-                if filter_func(book):
-                    wanted = False
-                    break
-            if not wanted:
-                continue
 
+    for book in books:
         val = getattr(book, metric)
 
         try:
@@ -67,7 +49,7 @@ def calculate_average_metric(file, keys_func, metric,
                 for subkey in keys:
                     book_count[subkey] += 1
                     metric_count[subkey] += val
-        else:
+        elif include_missing_pagination:
             book_count[ROGUE_KEY] += 1
             metric_count[ROGUE_KEY] += 0
     avgs = []
@@ -76,32 +58,29 @@ def calculate_average_metric(file, keys_func, metric,
 
     return avgs
 
-### A couple of convenience wrappers follow - these are probably the
-### only useful variants you'd actually want to use, unless you need extra
-### filtering
-
-def calculate_average_pagination(filename, grouping):
-    return calculate_average_metric(filename, grouping, 'pagination')
-
-def calculate_average_rating(filename, grouping):
-    def is_read(book):
-        return book.status == 'read'
-    return calculate_average_metric(filename, grouping, 'rating',
-                                    inclusive_filters=[is_read])
-
-
 
 if __name__ == '__main__':
 
     print('== Average page count by shelf ==')
-    for k, v, c in sorted(calculate_average_pagination(TEST_FILE, 'shelves'),
+    for k, v, c in sorted(calculate_average_metric(read_file(TEST_FILE),
+                                                       'shelves', 'pagination'),
                           key=lambda z: -z[1]):
         print('%-30s: %5d (%d)' % (k, v, c))
 
     print()
 
     print('== Average page count by decade ==')
-    for k, v, c in sorted(calculate_average_pagination(TEST_FILE, 'decade'),
+    for k, v, c in sorted(calculate_average_metric(read_file(TEST_FILE),
+                                                       'decade', 'pagination'),
+                          key=lambda z: z[0]):
+        print('%-30s: %5d (%d)' % (k, v, c))
+
+    print()
+
+    print('== Average page count by rating ==')
+    for k, v, c in sorted(calculate_average_metric(
+            read_file(TEST_FILE, filter_funcs=[only_read_and_rated_books]),
+            'padded_rating_as_stars', 'pagination', include_missing_pagination=False),
                           key=lambda z: z[0]):
         print('%-30s: %5d (%d)' % (k, v, c))
 

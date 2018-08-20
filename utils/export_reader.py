@@ -22,6 +22,8 @@ TODAY = date.today() # Assumption: anything using this lib will never run over m
 # to fix it properly)
 logging.getLogger().setLevel(logging.ERROR)
 
+SPECIAL_SHELVES = ('read', 'currently-reading', 'to-read')
+
 
 def date_from_string(ds):
     if ds:
@@ -126,8 +128,18 @@ class Book(object):
         return str(self.year)[:3] + '0s'
 
     @property
+    def rating_as_stars(self):
+        if self.rating is None:
+            return ""
+        else:
+            return '*' * self.rating
+
+    @property
+    def padded_rating_as_stars(self):
+        return '%-5s' % (self.rating_as_stars)
+
+    @property
     def days_on_tbr_pile(self):
-      try:
         if self.is_read:
             if not self.date_added or not self.date_read:
                 raise ValueError('%s is read, but has missing add or read date' %
@@ -143,8 +155,6 @@ class Book(object):
                 raise ValueError('%s is read, but has missing or future add date' %
                                  (self.title))
             return (TODAY - self.date_added).days
-      except TypeError as err:
-          pdb.set_trace()
 
     @property
     def shelves(self):
@@ -162,6 +172,10 @@ class Book(object):
         return s
 
     @property
+    def user_shelves(self):
+        return set(self.shelves) - set(SPECIAL_SHELVES)
+
+    @property
     def goodreads_url(self):
         return 'https://www.goodreads.com/book/show/%d' % (self.book_id)
 
@@ -172,11 +186,13 @@ class Book(object):
         return "'%s' by %s [%s], %s" % (self.title, self.author, self.year,
                                         self.status)
 
-### Some commonly used filters for use with read_files()
+### Some commonly used filters for use with read_file()
 def only_read_books(bk):
     return bk.is_read
 def only_unread_books(bk):
     return bk.is_unread
+def only_read_and_rated_books(bk):
+    return bk.is_read and bk.rating is not None and bk.rating > 0
 
 def read_file(filename, filter_funcs=None):
     # pdb.set_trace()

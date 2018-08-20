@@ -52,16 +52,20 @@ class ReadVsUnreadStats(object):
                 logging.warning('%s has %d read, %d unread' % (key, rd, ur))
         return self # For chaining
 
-    def render(self):
+    def render(self, output_function=print):
         def comparator(a, b):
             # print(a, b)
             # return int(a[1] - b[1])
 
             if a[1] == b[1]:
-                return abs(b[2]) - abs(a[2])
+                diff_difference = abs(b[2]) - abs(a[2])
+                if diff_difference == 0:
+                    return 1 if a[0] > b[0] else -1 # Use the key as a last resort
+                else:
+                    return diff_difference
             else:
                 return a[1] - b[1]
 
         for stat in sorted(self.stats, key=cmp_to_key(comparator)):
-            print('%-30s : %5d%% %3d %3d' % (stat[0], stat[1], stat[2],
+            output_function('%-30s : %5d%% %+3d %3d' % (stat[0], stat[1], stat[2],
                                              self.grouping_count[stat[0]]))
