@@ -98,7 +98,7 @@ def best_ranked_report(books, key_attribute, output_function=print, sort_by_rank
         sorting_key=lambda z: z[0]
     for stat in sorted(stats, key=sorting_key):
         # Standard deviation would be good too, to gauge (un)reliability
-        bars = render_ratings_as_bar(rating_groupings[stat[0]], unicode=True)
+        bars = render_ratings_as_bar(rating_groupings[stat[0]])
 
         if not ignore_single_book_groups or stat[2] > 1:
             output_function('%-30s : %.2f %4d %s' % (stat[0], stat[1], stat[2], bars))
