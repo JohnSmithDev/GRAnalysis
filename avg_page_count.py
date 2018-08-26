@@ -5,15 +5,12 @@ Show average page count for shelves and by decade of publication
 
 from __future__ import division
 
-from collections import defaultdict, Counter
-from functools import cmp_to_key
-import logging
-import pdb
+from collections import defaultdict
+# from functools import cmp_to_key
 # from statistics import stdev # Python 3.4+ (apparently)
-import sys
 
-
-from utils.export_reader import TEST_FILE, read_file, only_read_and_rated_books
+from utils.export_reader import read_file, only_read_and_rated_books
+from utils.arguments import parse_args
 
 def calculate_average_metric(books, keys_func, metric,
                              include_missing_pagination=True):
@@ -34,6 +31,8 @@ def calculate_average_metric(books, keys_func, metric,
     for book in books:
         val = getattr(book, metric)
 
+        # TODO: I think this keys related code can be simplied using the
+        # Book.property_as_*() methods?
         try:
             # Try keys_func as a property of a book object
             keys = getattr(book, keys_func)
@@ -60,9 +59,11 @@ def calculate_average_metric(books, keys_func, metric,
 
 
 if __name__ == '__main__':
+    args = parse_args('Show average page count for shelves, by decade of publication, and rating',
+                      supported_args='f')
 
     print('== Average page count by shelf ==')
-    for k, v, c in sorted(calculate_average_metric(read_file(TEST_FILE),
+    for k, v, c in sorted(calculate_average_metric(read_file(args=args),
                                                        'shelves', 'pagination'),
                           key=lambda z: -z[1]):
         print('%-30s: %5d (%d)' % (k, v, c))
@@ -70,7 +71,7 @@ if __name__ == '__main__':
     print()
 
     print('== Average page count by decade ==')
-    for k, v, c in sorted(calculate_average_metric(read_file(TEST_FILE),
+    for k, v, c in sorted(calculate_average_metric(read_file(args=args),
                                                        'decade', 'pagination'),
                           key=lambda z: z[0]):
         print('%-30s: %5d (%d)' % (k, v, c))
@@ -79,7 +80,7 @@ if __name__ == '__main__':
 
     print('== Average page count by rating ==')
     for k, v, c in sorted(calculate_average_metric(
-            read_file(TEST_FILE, filter_funcs=[only_read_and_rated_books]),
+            read_file(filter_funcs=[only_read_and_rated_books], args=args),
             'padded_rating_as_stars', 'pagination', include_missing_pagination=False),
                           key=lambda z: z[0]):
         print('%-30s: %5d (%d)' % (k, v, c))
