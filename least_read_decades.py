@@ -3,10 +3,14 @@
 Show which decades are least read (in terms of books read/books owned)
 """
 
-from utils.export_reader import TEST_FILE, read_file
+from utils.arguments import parse_args
+from utils.export_reader import read_file
 from utils.transformers import ReadVsUnreadStats
 
 if __name__ == '__main__':
-    ReadVsUnreadStats(read_file(TEST_FILE), 'decade',
-                      ignore_single_book_groups=False).process().render()
+   args = parse_args('Show which decades are least read (in terms of books read/books owned)')
+
+   books = read_file(args=args)
+   ReadVsUnreadStats(books, 'decade',
+                     ignore_single_book_groups=False).process().render()
 

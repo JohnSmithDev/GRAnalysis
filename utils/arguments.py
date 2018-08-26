@@ -11,7 +11,7 @@ class ArgumentError(Exception):
     pass
 
 
-def create_parser(description, supported_args):
+def create_parser(description, supported_args=''):
     parser = ArgumentParser(description=description)
 
     if 'f' in supported_args:
