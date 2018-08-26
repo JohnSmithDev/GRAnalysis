@@ -13,6 +13,7 @@ import pdb
 import re
 import sys
 
+# TODO: Deprecate/remove this... (currently it's imported by older scripts)
 TEST_FILE = os.path.join('/', 'home', 'john', 'Downloads',
                          'goodreads_library_export_latest.csv')
 
@@ -27,6 +28,7 @@ SPECIAL_SHELVES = ('read', 'currently-reading', 'to-read')
 
 
 def date_from_string(ds):
+    """Turn a string of format yyyy/mm/dd into a Python date object"""
     if ds:
         dbits = [int(z) for z in ds.split('/')]
         return date(dbits[0], dbits[1], dbits[2])
@@ -34,6 +36,7 @@ def date_from_string(ds):
         return None
 
 def nullable_int(s):
+    """Convert a string into an integer, or None if it is an empty string."""
     if s:
         return int(s)
     else:
@@ -221,9 +224,40 @@ def only_unread_books(bk):
 def only_read_and_rated_books(bk):
     return bk.is_read and bk.rating is not None and bk.rating > 0
 
-def read_file(filename, filter_funcs=None):
-    # pdb.set_trace()
-    # er_logger.basicConfig(format='XXXX %(levelname)s:%(message)s', level=logging.DEBUG)
+def create_shelf_filter(filter_string):
+    """
+    Factory function to return functions that reject books that are (or aren't
+    as appropriate, based on ! or ~ prefix) on a particular shelf.
+    """
+
+    def fltr(bk):
+        if filter_string[0] in ('!', '~'):
+            if filter_string[1:] in bk.shelves:
+                return False
+        else:
+            if filter_string not in bk.shelves:
+                return False
+        return True
+
+    return fltr
+
+def read_file(filename=None, filter_funcs=None, args=None):
+    """
+    Read a GR export CSV file, and yield a series of Book objects, optionally
+    filtering out certain books.
+    """
+
+    if args:
+        if args.csv_file:
+            filename = args.csv_file
+        if args.filters:
+            if filter_funcs:
+                filter_funcs = filter_funcs[:] # copy, so we don't mangle the original
+            else:
+                filter_funcs = []
+            for filter_string in args.filters:
+                filter_funcs.append(create_shelf_filter(filter_string))
+
     with open(filename) as csvfile:
         reader = csv.DictReader(csvfile)
         for line_num, row in enumerate(reader):
@@ -237,15 +271,10 @@ def read_file(filename, filter_funcs=None):
                             break
                 if wanted:
                     yield bk
+                else:
+                    logging.debug("Skipping %s" % (bk))
             except Exception as err:
                 logging.error('Blew up on line %d: %s/%s' % (line_num, err, type(err)))
                 pdb.set_trace()
-
-
-if __name__ == '__main__':
-    logging.getLogger().setLevel(logging.WARNING)
-
-    for b in read_file(TEST_FILE):
-        print(b)
 
 
