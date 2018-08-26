@@ -6,37 +6,14 @@ Show which decades have best average rankings
 from __future__ import division
 
 from collections import defaultdict
-import logging
-import pdb
+from functools import cmp_to_key
 
-from utils.export_reader import TEST_FILE, read_file, only_read_books
-from utils.display import render_ratings_as_bar
+from utils.arguments import parse_args
+from utils.export_reader import read_file, only_read_books
+from utils.transformers import best_ranked_report
 
 
 if __name__ == '__main__':
-    read_count = defaultdict(int)
-    cumulative_rating = defaultdict(int)
-    rating_groupings = defaultdict(lambda: [None, 0,0,0,0,0])
-    for book in read_file(TEST_FILE, filter_funcs=[only_read_books]):
-        br = book.rating
-        bd = book.decade
-        if br:
-            read_count[bd] += 1
-            cumulative_rating[bd] += br
-            rating_groupings[bd][br] += 1
-
-    stats = []
-    for k, rdr in read_count.items():
-        rd = read_count[k]
-        if rd > 1:
-            av = cumulative_rating[k] / rd
-            stats.append((k, av , rd))
-
-    # for stat in sorted(stats, cmp=comparator): # Python 2
-    for stat in sorted(stats, key=lambda z: z[0]):
-        # Standard deviation would be good too, to gauge (un)reliability
-        bars = render_ratings_as_bar(rating_groupings[stat[0]], unicode=True)
-
-        print('%-30s : %.2f %4d %s' % (stat[0], stat[1], stat[2], bars))
-
-
+    args = parse_args('Show average rating of decades, with a bar chart breaking down the rankings')
+    books = read_file(args=args, filter_funcs=[only_read_books])
+    best_ranked_report(books, 'decade', sort_by_ranking=False)
