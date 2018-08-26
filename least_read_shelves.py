@@ -8,4 +8,4 @@ from utils.transformers import ReadVsUnreadStats
 
 
 if __name__ == '__main__':
-    ReadVsUnreadStats(read_file(TEST_FILE), 'shelves').process().render()
+    ReadVsUnreadStats(read_file(TEST_FILE), 'user_shelves').process().render()

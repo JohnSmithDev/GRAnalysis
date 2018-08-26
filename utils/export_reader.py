@@ -174,6 +174,9 @@ class Book(object):
 
     @property
     def user_shelves(self):
+        """
+        Returns only the shelves defined by the user.
+        """
         return set(self.shelves) - set(SPECIAL_SHELVES)
 
     @property
@@ -188,10 +191,21 @@ class Book(object):
         """
         v = getattr(self, property_name)
         # https://stackoverflow.com/questions/16807011/python-how-to-identify-if-a-variable-is-an-array-or-a-scalar
-        if isinstance(v, Sequence) and not isinstance(v, str):
+        if (isinstance(v, Sequence) or isinstance(v, set)) and \
+           not isinstance(v, str):
             return v
         else:
             return [v]
+
+    def property_as_hashable(self, property_name):
+        """
+        A further convenience over property_as_sequence().
+        Q: Are there any cases where you'd want property_as_sequence over
+           this?  Perhaps we can merge these methods, or make the other one
+           private?
+        """
+        # Use of sorted() is for normalization
+        return tuple(sorted(self.property_as_sequence(property_name)))
 
     def __repr__(self):
         # use square parens to make it easier to distinguish from a series

@@ -3,7 +3,7 @@
 Classes/functions to transform raw data for reports
 """
 
-from collections import defaultdict, Sequence
+from collections import defaultdict
 from functools import cmp_to_key
 
 
@@ -18,13 +18,12 @@ class ReadVsUnreadStats(object):
         self.ignore_single_book_groups = ignore_single_book_groups
 
         for book in books:
-            for shelf in book.property_as_sequence(key_attribute):
-                if shelf not in ('currently-reading', 'read', 'to-read'):
-                    self.grouping_count[shelf] += 1
-                    if book.status in ('currently-reading', 'read'):
-                        self.read_count[shelf] += 1
-                    else:
-                        self.unread_count[shelf] += 1
+            for key in book.property_as_sequence(key_attribute):
+                self.grouping_count[key] += 1
+                if book.is_unread:
+                    self.unread_count[key] += 1
+                else:
+                    self.read_count[key] += 1
 
     def process(self):
         self.stats = []
@@ -33,13 +32,12 @@ class ReadVsUnreadStats(object):
             ur = self.unread_count[key]
             if self.ignore_single_book_groups and (rd + ur) == 1:
                 continue
-            # print('%-30s : %5d%% %3d' % (author, read_count[author], unread_count[author]))
             try:
                 self.stats.append((key, int(100 * (rd / (rd+ur))) , rd - ur))
             except ZeroDivisionError as err:
-                # pdb.set_trace()
+                # Q: Can this actually happen, or am I just being over-paranoid?
                 logging.warning('%s has %d read, %d unread' % (key, rd, ur))
-        return self # For chaining
+        return self # For method chaining
 
     def render(self, output_function=print):
         def comparator(a, b):
