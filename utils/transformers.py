@@ -18,24 +18,13 @@ class ReadVsUnreadStats(object):
         self.ignore_single_book_groups = ignore_single_book_groups
 
         for book in books:
-            for shelf in self._getattr_as_sequence(book, key_attribute):
+            for shelf in book.property_as_sequence(key_attribute):
                 if shelf not in ('currently-reading', 'read', 'to-read'):
                     self.grouping_count[shelf] += 1
                     if book.status in ('currently-reading', 'read'):
                         self.read_count[shelf] += 1
                     else:
                         self.unread_count[shelf] += 1
-
-    def _getattr_as_sequence(self, book, attribute):
-        """
-        Convenience functionReturn the 'attribute' property of 'book' as a sequence
-        """
-        v = getattr(book, attribute)
-        # https://stackoverflow.com/questions/16807011/python-how-to-identify-if-a-variable-is-an-array-or-a-scalar
-        if isinstance(v, Sequence) and not isinstance(v, str):
-            return v
-        else:
-            return [v]
 
     def process(self):
         self.stats = []

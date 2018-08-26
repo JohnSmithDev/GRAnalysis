@@ -3,6 +3,7 @@
 Library to read the CSV export that GoodReads makes available
 """
 
+from collections import Sequence
 import csv
 from datetime import date
 from decimal import Decimal
@@ -179,6 +180,18 @@ class Book(object):
     def goodreads_url(self):
         return 'https://www.goodreads.com/book/show/%d' % (self.book_id)
 
+    def property_as_sequence(self, property_name):
+        """
+        Convenience method for reports/functions that take a configurable
+        property that might be a scalar or an iterable, allowing that code
+        to treat everything as the latter case.
+        """
+        v = getattr(self, property_name)
+        # https://stackoverflow.com/questions/16807011/python-how-to-identify-if-a-variable-is-an-array-or-a-scalar
+        if isinstance(v, Sequence) and not isinstance(v, str):
+            return v
+        else:
+            return [v]
 
     def __repr__(self):
         # use square parens to make it easier to distinguish from a series
