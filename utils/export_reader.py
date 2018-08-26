@@ -250,13 +250,16 @@ def read_file(filename=None, filter_funcs=None, args=None):
     if args:
         if args.csv_file:
             filename = args.csv_file
-        if args.filters:
-            if filter_funcs:
-                filter_funcs = filter_funcs[:] # copy, so we don't mangle the original
-            else:
-                filter_funcs = []
-            for filter_string in args.filters:
-                filter_funcs.append(create_shelf_filter(filter_string))
+        try:
+            if args.filters:
+                if filter_funcs:
+                    filter_funcs = filter_funcs[:] # copy, so we don't mangle the original
+                else:
+                    filter_funcs = []
+                for filter_string in args.filters:
+                    filter_funcs.append(create_shelf_filter(filter_string))
+        except AttributeError:
+            pass # The calling script doesn't support (user-defined) filters
 
     with open(filename) as csvfile:
         reader = csv.DictReader(csvfile)
