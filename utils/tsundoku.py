@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 """
-DEPRECATED - USE utils.tsundoku and a wrapper script
-
-
 Draw a graphical representation of your to-be-read books (aka Mount Tsundoku)
 and/or your read books
 """
@@ -23,7 +20,7 @@ except ImportError:
 from utils.arguments import parse_args
 # from utils.display import ColourConfig
 from utils.colorama_canvas import ColoramaCanvas, COLORAMA_RESET
-from utils.export_reader import read_file
+# from utils.export_reader import read_file
 
 GROUP_BY_COLOURS = True
 
@@ -102,14 +99,14 @@ def _squash_calculation(number, target):
             vals[i] += 1
         return vals
 
-def squash(shelves, max_height=None):
+def squash(key_to_books_dict, max_height=None):
     """
-    Given a list of Count objects, split up the larger ones so that no value
+    Given a dict of keys->set(Book), split up the larger ones so that no value
     exceeds target_height.
     If max_height is not specified, then a - hopefully - reasonable value
     is calculated.
     """
-    counts = [Count(k, len(v)) for k, v in shelves.items()]
+    counts = [Count(k, len(v)) for k, v in key_to_books_dict.items()]
 
     if max_height is None:
         num_counts = len(counts)
@@ -130,15 +127,18 @@ def squash(shelves, max_height=None):
 
 
 class Tsundoku(object):
-    def __init__(self, col_cfg):
+    def __init__(self, col_cfg, group_by='user_shelves'):
         self.col_cfg = col_cfg
+        self.group_by = group_by
+
         self.unread_shelves = defaultdict(set)
         self.read_shelves = defaultdict(set)
 
     def process(self, books):
         for bk in books:
-            composite_key = tuple(sorted(bk.user_shelves))
+            # composite_key = tuple(sorted(bk.user_shelves))
             # composite_key = (bk.decade,)
+            composite_key = bk.property_as_hashable(self.group_by)
             if GROUP_BY_COLOURS:
                 composite_key = self.col_cfg.get_colour_bits(composite_key)
             if bk.is_read:
@@ -285,15 +285,4 @@ class Tsundoku(object):
             if not shelves:
                 shelves = 'Default'
             print('%s : %s' % (colour, shelves))
-
-
-if __name__ == '__main__':
-    args = parse_args('Render a graphical representation of your to-be-read pile aka Mount Tsundoku',
-                      'cf')
-
-    t = Tsundoku(args.colour_cfg)
-    t.process(read_file(args=args))
-    t.postprocess()
-    t.render()
-    t.output_colour_key() # Q: Or do this within .render() method?
 
