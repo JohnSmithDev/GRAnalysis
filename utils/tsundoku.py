@@ -7,7 +7,6 @@ and/or your read books
 from __future__ import division
 
 from collections import defaultdict, namedtuple
-# import json
 import pdb
 import sys
 
@@ -18,11 +17,12 @@ except ImportError:
     COLOUR_AVAILABLE = False
 
 from utils.arguments import parse_args
-# from utils.display import ColourConfig
 from utils.colorama_canvas import ColoramaCanvas, COLORAMA_RESET
-# from utils.export_reader import read_file
 
 GROUP_BY_COLOURS = True
+
+COLUMN_WIDTH = 2 # in characters
+
 
 Count = namedtuple('Count', 'key, count')
 Aggregates = namedtuple('Aggregates', 'max_count, num_columns, total')
@@ -160,7 +160,27 @@ class Tsundoku(object):
             sum([z.count for z in self.read_counts])
         )
 
+    def _render_ground_line(self, offset_for_y_axis_label,
+                            ground_level, width,
+                            unread_total, read_total):
+
+        # Try to find the longest (most comprehensible) labels that will fit
+        for fmt in ('%(arrow)s %(label)s (%(count)d) %(arrow)s',
+                       '%(arrow)s %(label)s %(arrow)s',
+                       '%(arrow)s %(label)s'):
+            l_str = fmt % {'arrow': '\u2b61', 'label': 'unread',
+                                'count': unread_total}
+            r_str = fmt % {'arrow': '\u2b63', 'label': 'read',
+                                'count': read_total}
+            if len(l_str) + len(r_str) < (width - offset_for_y_axis_label):
+                break
+
+        self.cc.print_at(offset_for_y_axis_label+1, ground_level, l_str)
+        self.cc.print_at(width - len(r_str), ground_level, r_str)
+
+
     def render(self):
+        # This might be useful for debugging, so leaving commented out for now..
         OLD_CODE = """
         for label, data in [('Unread', self.unread_counts),
                             ('Read', self.read_counts)]:
@@ -171,19 +191,17 @@ class Tsundoku(object):
                                               self.read_aggregates.max_count)))
 
         height = self.unread_aggregates.max_count + self.read_aggregates.max_count + 1
-        width = 2 * max(self.unread_aggregates.num_columns, self.read_aggregates.num_columns)
+        chart_width = COLUMN_WIDTH * max(self.unread_aggregates.num_columns,
+                                         self.read_aggregates.num_columns)
+        width = chart_width + offset_for_y_axis_label
         ground_level = self.unread_aggregates.max_count + 1 # This is like the x-axis of a graph
 
-        x_padding = 0
-        y_padding = 0
+        # TODO: work out if/why we really need these extra bodge values
+        self.cc = ColoramaCanvas(width + 3, height + 1)
 
-        self.cc = ColoramaCanvas(width + 20, height + 1, x_padding, y_padding)
-
-        self.cc.print_at(offset_for_y_axis_label+1, ground_level, '\u2b61 unread (%d) \u2b61' %
-                         (self.unread_aggregates.total))
-        rstr ='\u2b63 read (%d) \u2b63' % (self.read_aggregates.total)
-        self.cc.print_at(3 + width - len(rstr), ground_level, rstr)
-
+        self._render_ground_line(offset_for_y_axis_label, ground_level, width,
+                                 self.unread_aggregates.total,
+                                 self.read_aggregates.total)
 
         # Ensure that both halves of the mountain are roughly centered,
         # even if one half has more columns than the other
@@ -209,6 +227,7 @@ class Tsundoku(object):
                                    going_up=False)
 
         self.cc.render()
+
 
     def _render_half_mountain(self, counts, x_positions, ground_level,
                               offset_for_y_axis_label,
