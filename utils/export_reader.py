@@ -111,10 +111,28 @@ class Book(object):
 
     @property
     def series(self):
-        if title.endswith(')'):
-            regex = re.search('\((.)*\)$', title)
-            # TODO: filter out ", #1" if it exists
-            return regex.group(1)
+        """
+        Return either None (if the book is not in a series) or a tuple of
+        (name-of-series, volume[s]).  Note the latter is a string or None, in
+        order to be able to cater for compilation volumes e.g. (Earthsea Cycle, #1-4)
+        or cases where the volume number is not specified.
+        """
+        if self.title.endswith(')'):
+            series_regex = re.search('\((.*)\)$', self.title)
+            if series_regex:
+                all_bits = series_regex.group(1)
+                number_regex = re.search('^(.*),? #([\d\-]+)$', all_bits)
+                if number_regex:
+                    series_name = number_regex.group(1)
+                    if series_name.endswith(','):
+                        series_name = series_name[:-1]
+                    return series_name, number_regex.group(2)
+                else:
+                    return all_bits, None
+            else:
+                self._warn('Unclear if %s is in a series?  Assuming not' %
+                           (self.title))
+                return None
         else:
             return None
 
