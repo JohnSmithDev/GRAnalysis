@@ -114,3 +114,19 @@ def best_ranked_report(books, key_attribute, output_function=print, sort_by_rank
 
         if not ignore_single_book_groups or stat[2] > 1:
             output_function('%-30s : %.2f %4d %s' % (stat[0], stat[1], stat[2], bars))
+
+
+def get_keys_to_books_dict(books, key_attribute, output_function=print, sort_by_ranking=True,
+                       ignore_single_book_groups=False,
+                       ignore_undefined_book_groups=True):
+    """
+    Return a dictionary mapping some keys (e.g. shelves, dictionaries, etc)
+    to sets of Books
+    """
+
+    ret_dict = defaultdict(set)
+    for book in books:
+        for key in book.property_as_sequence(key_attribute):
+            if key or not ignore_undefined_book_groups:
+                ret_dict[key].add(book)
+    return ret_dict
