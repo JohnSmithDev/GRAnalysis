@@ -10,9 +10,18 @@ from functools import cmp_to_key
 
 from utils.display import render_ratings_as_bar
 
-class ReadVsUnreadStats(object):
-    def __init__(self, books, key_attribute, ignore_single_book_groups=True):
+# TODO (maybe): ReadVsUnreadStats() and best_ranked_report() have different
+#               defaults for ignore_single_book_groups - this could be
+#               confusing?  The reasoning for the current status quo is:
+#               * For ReadVsUnread groups, any number of read or unread is
+#                 relevant
+#               * For group ranking, only having a single rank is not considered
+#                 sufficient representation to be meaningful
 
+
+class ReadVsUnreadStats(object):
+    def __init__(self, books, key_attribute, ignore_single_book_groups=True,
+                 ignore_undefined_book_groups=True):
         # Would be nice to use counters, but I dunno if that's possible for two
         # counters and a generator?
         self.unread_count = defaultdict(int)
@@ -22,11 +31,12 @@ class ReadVsUnreadStats(object):
 
         for book in books:
             for key in book.property_as_sequence(key_attribute):
-                self.grouping_count[key] += 1
-                if book.is_unread:
-                    self.unread_count[key] += 1
-                else:
-                    self.read_count[key] += 1
+                if key or not ignore_undefined_book_groups:
+                    self.grouping_count[key] += 1
+                    if book.is_unread:
+                        self.unread_count[key] += 1
+                    else:
+                        self.read_count[key] += 1
 
     def process(self):
         self.stats = []
@@ -57,14 +67,15 @@ class ReadVsUnreadStats(object):
                 return a[1] - b[1]
 
         for stat in sorted(self.stats, key=cmp_to_key(comparator)):
-            output_function('%-30s : %5d%% %+3d %3d' % (stat[0], stat[1], stat[2],
+            output_function('%-30s : %5d%% %+3d %3d' % (stat[0][:30], stat[1], stat[2],
                                              self.grouping_count[stat[0]]))
 
 
 
 
 def best_ranked_report(books, key_attribute, output_function=print, sort_by_ranking=True,
-                       ignore_single_book_groups=False):
+                       ignore_single_book_groups=False,
+                       ignore_undefined_book_groups=True):
     read_count = defaultdict(int)
     cumulative_rating = defaultdict(int)
 
@@ -74,9 +85,10 @@ def best_ranked_report(books, key_attribute, output_function=print, sort_by_rank
         br = book.rating
         if br:
             for key in book.property_as_sequence(key_attribute):
-                read_count[key] += 1
-                cumulative_rating[key] += br
-                rating_groupings[key][br] += 1
+                if key or not ignore_undefined_book_groups:
+                    read_count[key] += 1
+                    cumulative_rating[key] += br
+                    rating_groupings[key][br] += 1
 
     stats = []
     for k, rdr in read_count.items():
