@@ -109,32 +109,81 @@ class Book(object):
         else:
             return title
 
+    @staticmethod
+    def _strip_trilogy_etc(series_name):
+        """
+        Remove any excess prefixes and/or suffixes from a series name
+
+        Note that this is less to do with objecting to the bits that get removed
+        than it is about trying to work aroundinconsistent naming in the GR
+        data e.g.
+        Downloads $ grep -i southern.reach goodreads_library_export.csv | cut -c -50
+        38830119,Annihilation (Southern Reach Trilogy 1),J
+        25984319,"Acceptance (Southern Reach, #3)",Jeff Va
+        21198143,Authority (Southern Reach #2),Jeff Vander
+        (See also "Expanse" vs "The Expanse"
+        """
+
+        for prefix in ('The ',): # A? An?
+            if series_name.startswith(prefix):
+                strip_len = len(prefix)
+                series_name = series_name[strip_len:]
+        for suffix in ('Trilogy',): # Duology?  Quartet?
+            if series_name.endswith(suffix):
+                strip_len = -len(suffix)
+                series_name = series_name[:strip_len]
+        return series_name
+
     @property
-    def series(self):
+    def series_and_volume(self):
         """
         Return either None (if the book is not in a series) or a tuple of
         (name-of-series, volume[s]).  Note the latter is a string or None, in
         order to be able to cater for compilation volumes e.g. (Earthsea Cycle, #1-4)
         or cases where the volume number is not specified.
         """
+        strip_trilogy_etc = True # Would we ever not want to strip them?
+
         if self.title.endswith(')'):
             series_regex = re.search('\((.*)\)$', self.title)
             if series_regex:
                 all_bits = series_regex.group(1)
-                number_regex = re.search('^(.*),? #([\d\-]+)$', all_bits)
+                number_regex = re.search('^(.*),? (#|Book |Trilogy )([\d\-]+)$', all_bits)
                 if number_regex:
-                    series_name = number_regex.group(1)
+                    series_name, volume_prefix, volume_number = (number_regex.group(1),
+                                                                 number_regex.group(2),
+                                                                 number_regex.group(3))
                     if series_name.endswith(','):
                         series_name = series_name[:-1]
-                    return series_name, number_regex.group(2)
                 else:
-                    return all_bits, None
+                    series_name = all_bits
+                    volume_number = None
+                if strip_trilogy_etc:
+                    series_name = self._strip_trilogy_etc(series_name)
+                return series_name.strip(), volume_number
             else:
                 self._warn('Unclear if %s is in a series?  Assuming not' %
                            (self.title))
                 return None
         else:
             return None
+
+    @property
+    def series(self):
+        sv = self.series_and_volume
+        if sv:
+            return sv[0]
+        else:
+            return None
+
+    @property
+    def volume_number(self):
+        sv = self.series_and_volume
+        if sv and sv[1] is not None:
+            return sv[1]
+        else:
+            return None
+
 
     @property
     def year(self):
