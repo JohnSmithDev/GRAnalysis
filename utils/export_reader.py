@@ -42,6 +42,39 @@ def nullable_int(s):
     else:
         return None
 
+def strip_prefixes(txt, prefixes):
+    if not txt:
+        return None
+    txt = txt.strip()
+    for prefix in prefixes:
+        if txt.startswith(prefix):
+            strip_len = len(prefix)
+            txt = txt[:strip_len]
+    return txt
+
+def strip_suffixes(txt, suffixes):
+    if not txt:
+        return None
+    txt = txt.strip()
+    for suffix in suffixes:
+        if txt.endswith(suffix):
+            strip_len = -len(suffix)
+            txt = txt[:strip_len]
+    return txt
+
+def sanitise_publisher(pub):
+    """
+    Remove extraneous text from publisher name, primarily to aid reports that
+    group books from a publisher together.
+
+    This is a bit of a losing battle, but hopefully we'll catch many of the
+    easy ones.
+    """
+    return strip_suffixes(pub, (' PLC', ' and Company', ' Limited', ' Ltd', ' LLC',
+                                ' Books', ' UK', ' Press', ' Digital',
+                                ' Publishing', ' Publishers',
+                                ' Publishing Co', ' Publishing Group'))
+
 class Book(object):
     def __init__(self, row_dict):
         # Book specific stuff
@@ -50,7 +83,8 @@ class Book(object):
         self.originally_published_year = nullable_int(row_dict['Original Publication Year'])
 
         # Edition specific stuff
-        self.publisher = row_dict['Publisher'].strip()
+        self.raw_publisher = sanitise_publisher(row_dict['Publisher'])
+        self.publisher = sanitise_publisher(self.raw_publisher)
         self.year_published = nullable_int(row_dict['Year Published'])
         try:
             self.pagination = int(row_dict['Number of Pages'])
@@ -124,14 +158,8 @@ class Book(object):
         (See also "Expanse" vs "The Expanse"
         """
 
-        for prefix in ('The ',): # A? An?
-            if series_name.startswith(prefix):
-                strip_len = len(prefix)
-                series_name = series_name[strip_len:]
-        for suffix in ('Trilogy',): # Duology?  Quartet?
-            if series_name.endswith(suffix):
-                strip_len = -len(suffix)
-                series_name = series_name[:strip_len]
+        series_name = strip_prefixes(series_name, ('The ',)) # A? An?
+        series_name = strip_suffixes(series_name, ('Trilogy',)) # Duology?  Quartet?
         return series_name
 
     @property
