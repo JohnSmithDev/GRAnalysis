@@ -45,12 +45,12 @@ def nullable_int(s):
 class Book(object):
     def __init__(self, row_dict):
         # Book specific stuff
-        self.title = row_dict['Title']
-        self.author = row_dict['Author']
+        self.title = row_dict['Title'].strip()
+        self.author = row_dict['Author'].strip()
         self.originally_published_year = nullable_int(row_dict['Original Publication Year'])
 
         # Edition specific stuff
-        self.publisher = row_dict['Publisher']
+        self.publisher = row_dict['Publisher'].strip()
         self.year_published = nullable_int(row_dict['Year Published'])
         try:
             self.pagination = int(row_dict['Number of Pages'])
