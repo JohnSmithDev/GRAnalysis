@@ -135,6 +135,17 @@ class Book(object):
         # Note that this excludes currently read books
         return self.status == 'to-read'
 
+    @property
+    def year_read(self):
+        if not self.date_read:
+            return None
+        return self.date_read.year
+
+    @property
+    def month_read(self):
+        if not self.date_read:
+            return None
+        return '%04d-%02d' % (self.date_read.year, self.date_read.month)
 
     @property
     def clean_title(self):
@@ -212,6 +223,18 @@ class Book(object):
         else:
             return None
 
+    @property
+    def pagination_range(self):
+        pg = self.pagination
+        if pg is None:
+            return None
+        elif pg < 100:
+            return '<100'
+        elif pg >= 600:
+            return '>600'
+        else:
+            base = pg - (pg % 50)
+            return '%s-%s' % (base, base + 49)
 
     @property
     def year(self):
