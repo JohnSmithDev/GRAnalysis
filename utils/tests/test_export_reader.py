@@ -2,6 +2,7 @@
 
 import unittest
 from .. import export_reader
+from ..book import Book
 
 
 class TestBook(unittest.TestCase):
@@ -26,7 +27,7 @@ class TestBook(unittest.TestCase):
     }
 
     def test_book_basic(self):
-        bk = export_reader.Book(self.MOCK_BOOK)
+        bk = Book(self.MOCK_BOOK)
         self.assertEqual(2001, bk.year)
         self.assertTrue(bk.is_read)
         self.assertFalse(bk.is_unread)
@@ -57,7 +58,7 @@ class TestBook(unittest.TestCase):
         # e.g. Tales From Earthsea (Earthsea Cycle, #5)
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'The Cliche of Cliches (Overlong Fantasy Series, #13)'
-        bk = export_reader.Book(bdict)
+        bk = Book(bdict)
         self.assertEqual(('Overlong Fantasy Series', '13'), bk.series_and_volume)
         self.assertEqual('Overlong Fantasy Series', bk.series)
         self.assertEqual('13', bk.volume_number)
@@ -66,7 +67,7 @@ class TestBook(unittest.TestCase):
         # e.g. The Space Merchants (The Space Merchants #1)
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'The Cliche of Cliches (Overlong Fantasy Series #14)'
-        bk = export_reader.Book(bdict)
+        bk = Book(bdict)
         self.assertEqual(('Overlong Fantasy Series', '14'), bk.series_and_volume)
         self.assertEqual('Overlong Fantasy Series', bk.series)
         self.assertEqual('14', bk.volume_number)
@@ -75,7 +76,7 @@ class TestBook(unittest.TestCase):
         # e.g. "Annihilation (Southern Reach Trilogy 1)"
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'The Cliche of Cliches (Fantasy Trilogy 3)'
-        bk = export_reader.Book(bdict)
+        bk = Book(bdict)
         self.assertEqual(('Fantasy', '3'), bk.series_and_volume)
         self.assertEqual('Fantasy', bk.series)
         self.assertEqual('3', bk.volume_number)
@@ -84,7 +85,7 @@ class TestBook(unittest.TestCase):
         # e.g. Colossus and the Crab (Colossus Trilogy Book 3)
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'The Cliche of Cliches (Fantasy Trilogy Book 3)'
-        bk = export_reader.Book(bdict)
+        bk = Book(bdict)
         self.assertEqual(('Fantasy', '3'), bk.series_and_volume)
         self.assertEqual('Fantasy', bk.series)
         self.assertEqual('3', bk.volume_number)
@@ -93,7 +94,7 @@ class TestBook(unittest.TestCase):
         # e.g. Helliconia (Helliconia, #1-3)
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'The Cliche of Cliches (Overlong Fantasy Series #1-3)'
-        bk = export_reader.Book(bdict)
+        bk = Book(bdict)
         self.assertEqual(('Overlong Fantasy Series', '1-3'), bk.series_and_volume)
         self.assertEqual('Overlong Fantasy Series', bk.series)
         self.assertEqual('1-3', bk.volume_number)
@@ -102,7 +103,7 @@ class TestBook(unittest.TestCase):
         # e.g. Meeting Infinity (The Infinity Project)
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'The Cliche of Cliches (Overlong Fantasy Series)'
-        bk = export_reader.Book(bdict)
+        bk = Book(bdict)
         self.assertEqual(('Overlong Fantasy Series', None), bk.series_and_volume)
         self.assertEqual('Overlong Fantasy Series', bk.series)
         self.assertIsNone(bk.volume_number)
@@ -111,7 +112,7 @@ class TestBook(unittest.TestCase):
         # e.g. I Am (Not) A Number: Decoding The Prisoner
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'Foo (Bar) Baz'
-        bk = export_reader.Book(bdict)
+        bk = Book(bdict)
         self.assertIsNone(bk.series_and_volume)
         self.assertIsNone(bk.series)
         self.assertIsNone(bk.volume_number)
