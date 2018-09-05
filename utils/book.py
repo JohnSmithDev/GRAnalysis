@@ -23,8 +23,13 @@ SPECIAL_SHELVES = ('read', 'currently-reading', 'to-read')
 
 def date_from_string(ds):
     """Turn a string of format yyyy/mm/dd into a Python date object"""
+    # This is now used for the command-line filters, so we also support -
+    # as a separator
+    separator = '/'
+    if '-' in ds:
+        separator = '-'
     if ds:
-        dbits = [int(z) for z in ds.split('/')]
+        dbits = [int(z) for z in ds.split(separator)]
         return date(dbits[0], dbits[1], dbits[2])
     else:
         return None

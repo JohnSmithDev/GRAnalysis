@@ -119,11 +119,11 @@ class TestCreateComparisonFilter(unittest.TestCase):
         self.assertFalse(fltr3(MOCK_BOOK))
 
     def test_equalorgreaterthan(self):
-        fltr1 = export_reader.create_comparison_filter('pagination', '=>', '122')
+        fltr1 = export_reader.create_comparison_filter('date_read', '=>', '2015-12-24')
         self.assertTrue(fltr1(MOCK_BOOK))
-        fltr2 = export_reader.create_comparison_filter('pagination', '=>', '123')
+        fltr2 = export_reader.create_comparison_filter('date_read', '=>', '2015-12-25')
         self.assertTrue(fltr2(MOCK_BOOK))
-        fltr3 = export_reader.create_comparison_filter('pagination', '=>', '124')
+        fltr3 = export_reader.create_comparison_filter('date_read', '=>', '2015-12-26')
         self.assertFalse(fltr3(MOCK_BOOK))
 
     def test_lessthan(self):
@@ -150,6 +150,19 @@ class TestCreateComparisonFilter(unittest.TestCase):
         fltr3 = export_reader.create_comparison_filter('pagination', '=<', '124')
         self.assertTrue(fltr3(MOCK_BOOK))
 
+class TestCreateFilter(unittest.TestCase):
+
+    def test_creating_shelf_filter(self):
+        fltr1 = export_reader.create_filter('testing')
+        self.assertTrue(fltr1(MOCK_BOOK))
+        fltr2 = export_reader.create_filter('besting')
+        self.assertFalse(fltr2(MOCK_BOOK))
+
+    def test_creating_comparison_filter(self):
+        fltr1 = export_reader.create_filter('year = 2001')
+        self.assertTrue(fltr1(MOCK_BOOK))
+        fltr2 = export_reader.create_filter('year = 1999')
+        self.assertFalse(fltr2(MOCK_BOOK))
 
 if __name__ == '__main__':
     unittest.main()

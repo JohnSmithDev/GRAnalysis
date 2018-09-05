@@ -11,7 +11,7 @@ import pdb
 import re
 import sys
 
-from utils.book import Book
+from utils.book import Book, date_from_string
 
 
 TODAY = date.today() # Assumption: anything using this lib will never run over multiple days
@@ -63,7 +63,10 @@ def create_comparison_filter(property, comparison, string_value):
 
         if actual_vals and actual_vals[0]:
             type_to_cast_to = type(actual_vals[0])
-            value = type_to_cast_to(string_value)
+            if type_to_cast_to == date:
+                value = date_from_string(string_value)
+            else:
+                value = type_to_cast_to(string_value)
         else:
             # Typically this will be on books where the relevant  property is None
             # e.g. missing pagination in the data export, rating or read_date on
@@ -97,7 +100,7 @@ def create_comparison_filter(property, comparison, string_value):
     return fltr
 
 def create_filter(filter_string):
-    comparison_regex = re.search('\s*(\w+)\s*([!=<>~]+)\s*(\w+)\s*', filter_string)
+    comparison_regex = re.search('\s*(\w+)\s*([!=<>~]+)\s*(\S+)\s*', filter_string)
     if comparison_regex:
         return create_comparison_filter(comparison_regex.group(1),
                                         comparison_regex.group(2),
@@ -143,6 +146,7 @@ def read_file(filename=None, filter_funcs=None, args=None):
                     logging.debug("Skipping %s" % (bk))
             except Exception as err:
                 logging.error('Blew up on line %d: %s/%s' % (line_num, err, type(err)))
-                pdb.set_trace()
+                raise(err)
+                # pdb.set_trace()
 
 
