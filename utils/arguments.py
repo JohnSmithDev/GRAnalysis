@@ -19,7 +19,8 @@ def create_parser(description, supported_args=''):
     if 'f' in supported_args:
         parser.add_argument('-f', dest='filters',
                             action='append', default=[],
-                            help='Filter only books that are on specified shelves')
+                            help='Filter only books that are on specified shelves, ' +
+                            'or that have property with particular value(s)')
 
     if 'l' in supported_args:
         parser.add_argument('-l', dest='limit', type=int, nargs='?',
