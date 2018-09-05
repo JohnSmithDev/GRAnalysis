@@ -48,6 +48,63 @@ def create_shelf_filter(filter_string):
 
     return fltr
 
+def create_comparison_filter(property, comparison, string_value):
+    # Note that we don't support value/comparison/property order for filter
+    # command line arguments
+
+    def fltr(bk):
+        actual_val = getattr(bk, property)
+        # Strictly speaking the "plural" vals version is unnecessary here,
+        # because the only property that can have multiple values is shelves,
+        # and that is supported by create_shelf_filter() and omitting any
+        # property name and comparison operator.  However, it may be more user
+        # friendly to support '-f user_shelves = non-fiction'?
+        actual_vals = bk.property_as_sequence(property)
+
+        if actual_vals and actual_vals[0]:
+            type_to_cast_to = type(actual_vals[0])
+            value = type_to_cast_to(string_value)
+        else:
+            # Typically this will be on books where the relevant  property is None
+            # e.g. missing pagination in the data export, rating or read_date on
+            #      an unread book
+            # TODO (probably): downgrade to warning
+            logging.error("Unable to compare %s %s %s %s for %s - ignoring" %
+                            (property, string_value, comparison,
+                             actual_val, bk.title))
+            return False
+
+        if comparison in ('=', '=='):
+            return value in actual_vals
+        elif comparison in ('!=', '<>'):
+            return not value in actual_vals
+        elif comparison in ('~', '~=', '=~'):
+            for av in actual_vals:
+                if re.search(value, av, re.IGNORECASE):
+                    return True
+            return False
+        elif comparison == '>':
+            return actual_val > value
+        elif comparison in ('>=', '=>'):
+            return actual_val >= value
+        elif comparison == '<':
+            return actual_val < value
+        elif comparison in ('<=', '=<'):
+            return actual_val <= value
+
+        raise ValueError('Unknown comparison operator "%s' % (comparison))
+
+    return fltr
+
+def create_filter(filter_string):
+    comparison_regex = re.search('\s*(\w+)\s*([!=<>~]+)\s*(\w+)\s*', filter_string)
+    if comparison_regex:
+        return create_comparison_filter(comparison_regex.group(1),
+                                        comparison_regex.group(2),
+                                        comparison_regex.group(3))
+    else:
+        return create_shelf_filter(filter_string)
+
 def read_file(filename=None, filter_funcs=None, args=None):
     """
     Read a GR export CSV file, and yield a series of Book objects, optionally
@@ -64,8 +121,9 @@ def read_file(filename=None, filter_funcs=None, args=None):
                 else:
                     filter_funcs = []
                 for filter_string in args.filters:
-                    filter_funcs.append(create_shelf_filter(filter_string))
-        except AttributeError:
+                    filter_funcs.append(create_filter(filter_string))
+        except AttributeError as err:
+            # logging.error(err)
             pass # The calling script doesn't support (user-defined) filters
 
     with open(filename) as csvfile:
