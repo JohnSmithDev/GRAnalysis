@@ -48,7 +48,7 @@ def strip_prefixes(txt, prefixes):
     for prefix in prefixes:
         if txt.startswith(prefix):
             strip_len = len(prefix)
-            txt = txt[:strip_len]
+            txt = txt[strip_len:]
     return txt
 
 def strip_suffixes(txt, suffixes):
@@ -186,13 +186,11 @@ class Book(object):
             series_regex = re.search('\((.*)\)$', self.title)
             if series_regex:
                 all_bits = series_regex.group(1)
-                number_regex = re.search('^(.*),? (#|Book |Trilogy )([\d\-]+)$', all_bits)
+                number_regex = re.search('^(.*[^,]),? (#|Book |Trilogy )([\d\-]+)$', all_bits)
                 if number_regex:
                     series_name, volume_prefix, volume_number = (number_regex.group(1),
                                                                  number_regex.group(2),
                                                                  number_regex.group(3))
-                    if series_name.endswith(','):
-                        series_name = series_name[:-1]
                 else:
                     series_name = all_bits
                     volume_number = None

@@ -117,5 +117,14 @@ class TestBook(unittest.TestCase):
         self.assertIsNone(bk.series)
         self.assertIsNone(bk.volume_number)
 
+    def test_book_series_prefix_stripping(self):
+        bdict = self.MOCK_BOOK.copy()
+        bdict['Title'] = 'Foo (The Foo Chronicles, #1)'
+        bk = Book(bdict)
+        self.assertEqual(('Foo Chronicles', '1'), bk.series_and_volume)
+        self.assertEqual('Foo Chronicles', bk.series)
+        self.assertEqual('1', bk.volume_number)
+
+
 if __name__ == '__main__':
     unittest.main()
