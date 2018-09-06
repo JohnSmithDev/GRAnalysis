@@ -5,6 +5,8 @@ A set of Python scripts and library code to process
 analyse it for personal preferences, to-be-read suggestions, and general
 data interrogation.
 
+Examples of the reports you can generate can be seen [here](REPORTS.md#data-interrogation-reports).
+
 ## Dependencies
 
 * Python 3
@@ -18,7 +20,7 @@ data interrogation.
 
 ## Licence
 
-GPL v3 - see [LICENCE.txt](licence.txt) for full text,
+GPL v3 - see [LICENCE.txt](licence.txt) for full text.
 
 ## Disclaimers
 
