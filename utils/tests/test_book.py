@@ -10,6 +10,7 @@ class TestBook(unittest.TestCase):
     MOCK_BOOK = {
         'Title': 'A Mock Book',
         'Author': 'Mick Mock',
+        'Additional Authors': 'Terry Test, Peter Python', # .additional_authors, .all_authors
         'Original Publication Year': '2001',
         'Publisher': 'Mock Corp',
         'Year Published': '2002',
@@ -43,6 +44,11 @@ class TestBook(unittest.TestCase):
                          sorted(bk.shelves))
         self.assertEqual({'mocking', 'python', 'software', 'testing'},
                          bk.user_shelves)
+
+        self.assertEqual(['Peter Python', 'Terry Test'],
+                         sorted(bk.additional_authors))
+        self.assertEqual(['Mick Mock', 'Peter Python', 'Terry Test'],
+                         sorted(bk.all_authors))
 
         self.assertEqual(['mocking', 'python', 'read', 'software', 'testing'],
                          sorted(bk.property_as_sequence('shelves')))

@@ -79,6 +79,8 @@ class Book(object):
         # Book specific stuff
         self.title = row_dict['Title'].strip()
         self.author = row_dict['Author'].strip()
+        self._raw_additional_authors = row_dict['Additional Authors']
+        # self._raw_additional_authors = row_dict['Bookshelves']
         self.originally_published_year = nullable_int(row_dict['Original Publication Year'])
 
         # Edition specific stuff
@@ -274,6 +276,19 @@ class Book(object):
                 raise ValueError('%s is read, but has missing or future add date' %
                                  (self.title))
             return (TODAY - self.date_added).days
+
+    @property
+    def additional_authors(self):
+        if not self._raw_shelves:
+            return []
+        else:
+            return [z.strip() for z in re.split(',', self._raw_additional_authors)]
+
+    @property
+    def all_authors(self):
+        ret = [self.author]
+        ret.extend(self.additional_authors)
+        return ret
 
     @property
     def shelves(self):

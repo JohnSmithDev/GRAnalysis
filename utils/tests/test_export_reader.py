@@ -7,6 +7,7 @@ from ..book import Book
 MOCK_BOOK_DATA = {
     'Title': 'A Mock Book',
     'Author': 'Mick Mock',
+    'Additional Authors': 'Terry Test, Peter Python', # .additional_authors, .all_authors
     'Original Publication Year': '2001', # bk.originally_published_year
     'Publisher': 'Mock Corp',
     'Year Published': '2002', # bk.year_published
