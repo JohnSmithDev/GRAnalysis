@@ -14,13 +14,14 @@ date can cause the "new" one not to be used.
 ## Works with multiple authors
 
 Books that have been written by 2 - or more? - authors only get attributed to
-a single author in the export.  (I suspect this is the alphabetically first
-author, but I haven't checked.)
+a single author in the Author column export.  (I suspect this is the
+alphabetically first author, but I haven't checked.)  Use the 'all authors'
+property to pick up any additional authors.
 
 Anthologies are credited to the editor.  There is an "Additional Authors"
 column in the CSV which isn't (currently) used by this project, although it
-doesn't seem to be always populated - this is presumably an issue with the
-data in GoodReads itself, rather than the export.
+doesn't seem to be always populated or complete - this is presumably an issue
+with the data in GoodReads itself, rather than the export.
 
 # Issues with the data in GoodReads
 
