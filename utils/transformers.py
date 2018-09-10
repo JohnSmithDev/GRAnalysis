@@ -67,7 +67,7 @@ class ReadVsUnreadStats(object):
                 return a[1] - b[1]
 
         for stat in sorted(self.stats, key=cmp_to_key(comparator)):
-            output_function('%-30s : %5d%% %+3d %3d' % (stat[0][:30], stat[1], stat[2],
+            output_function('%-30s : %5d%% %+3d %3d' % (str(stat[0])[:30], stat[1], stat[2],
                                              self.grouping_count[stat[0]]))
 
 
