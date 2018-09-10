@@ -169,10 +169,13 @@ class Book(object):
 
     @property
     def clean_title(self):
-        if title.endswith(')'):
-            return title.split('(')[0].strip()
+        # TODO: This will return the wrong thing on a hypothetical title like
+        # 'Was (Not) Was (Volume 1' - use something like the regexes in
+        # .series_and_volume() to do the right thing
+        if self.title.endswith(')'):
+            return self.title.split('(')[0].strip()
         else:
-            return title
+            return self.title
 
     @staticmethod
     def _strip_trilogy_etc(series_name):
@@ -372,6 +375,12 @@ class Book(object):
         """
         # Use of sorted() is for normalization
         return tuple(sorted(self.property_as_sequence(property_name)))
+
+    def _properties(self):
+        public_prop_names = [z for z in dir(self) if not z.startswith('_')]
+        public_props = [(z, getattr(self, z)) for z in public_prop_names]
+        return [z[0] for z in public_props if not hasattr(z[1], '__call__')]
+
 
     def __repr__(self):
         # use square parens to make it easier to distinguish from a series
