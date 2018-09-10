@@ -25,6 +25,10 @@ def valid_date_type(arg_date_str):
 def create_parser(description, supported_args=''):
     parser = ArgumentParser(description=description)
 
+    if 'a' in supported_args:
+        parser.add_argument('-a', dest='all_authors', action='store_true',
+                            help='Report on all authors, not just the main one')
+
     if 'c' in supported_args:
         parser.add_argument('-c', dest='colour_cfg_file', nargs='?',
                             default=os.environ.get('GR_COLOUR_CFG'),

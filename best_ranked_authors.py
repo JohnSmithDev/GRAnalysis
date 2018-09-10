@@ -13,7 +13,9 @@ from utils.transformers import best_ranked_report
 
 
 if __name__ == '__main__':
-    args = parse_args('Show average rating of authors, with a bar chart breaking down the rankings')
+    args = parse_args('Show average rating of authors, with a bar chart breaking down the rankings',
+                      'a')
     books = read_file(args=args, filter_funcs=[only_read_books])
-    best_ranked_report(books, 'author', ignore_single_book_groups=True)
+    best_ranked_report(books, 'all_authors' if args.all_authors else 'author',
+                       ignore_single_book_groups=True)
 
