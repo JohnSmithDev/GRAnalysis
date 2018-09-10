@@ -37,7 +37,7 @@ def report(books, label, min_period, max_books, output_function=print):
 
 if __name__ == '__main__':
     parser = create_parser('Show which books have languished the longest on the TBR pile',
-                      supported_args='fl')
+                      supported_args='dfl')
     parser.add_argument('-p', dest='min_period', type=int, nargs='?',
                         default=31, help='Minimum period to report in (in days)')
     args = parser.parse_args()

@@ -11,7 +11,7 @@ from utils.tsundoku import Tsundoku
 if __name__ == '__main__':
     args = parse_args('Render a graphical representation of your to-be-read pile '
                       'aka Mount Tsundoku, colour coded by shelves',
-                      'cf')
+                      'cdf')
 
     t = Tsundoku(args.colour_cfg, 'user_shelves')
     t.process(read_file(args=args))
