@@ -13,13 +13,33 @@ Hint: !foo arguments are liable to confuse your shell (unless you quote/backslas
       them), so ~foo is recommended for convenience.
 
 """
+
+import sys
+
 from utils.export_reader import read_file
-from utils.arguments import parse_args
+from utils.arguments import create_parser, validate_args
 
 if __name__ == '__main__':
-    args = parse_args('List all books that are a member of one or more specified shelves, and ' +
-                      'not a memmber of any shelves prefixed with ! or ~',
+    parser = create_parser('List all books that are a member of one or more specified shelves, ' +
+                      'and not a memmber of any shelves prefixed with ! or ~',
                       supported_args='f')
-    for book in read_file(args=args):
-        print(book)
+    parser.add_argument('-p', dest='properties', action='append', default=[],
+                        help='List value of property/properties')
+    parser.add_argument('-P', dest='property_names', action='store_true',
+                        help='List all property names')
+    args = parser.parse_args()
+    validate_args(args)
 
+    for book in read_file(args=args):
+        if args.property_names:
+            print('\n'.join(book._properties()))
+            sys.exit(1)
+        print(book)
+        for prop in args.properties:
+            try:
+                val = getattr(book, prop)
+            except Exception as err:
+                # Avoid blowing up on stuff like days_on_tbr_pile on unread
+                # books
+                val = 'Error (%s)' % (err)
+            print('  %-20s : %s' % (prop, val))
