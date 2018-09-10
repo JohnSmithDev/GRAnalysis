@@ -11,7 +11,7 @@ import pdb
 import re
 import sys
 
-from utils.book import Book, date_from_string
+from utils.book import Book, date_from_string, NotOwnedAtSpecifiedDateError
 
 
 TODAY = date.today() # Assumption: anything using this lib will never run over multiple days
@@ -129,11 +129,16 @@ def read_file(filename=None, filter_funcs=None, args=None):
             # logging.error(err)
             pass # The calling script doesn't support (user-defined) filters
 
+
+    try:
+        effective_date = args.date
+    except AttributeError:
+        effective_date = None
     with open(filename) as csvfile:
         reader = csv.DictReader(csvfile)
         for line_num, row in enumerate(reader):
             try:
-                bk = Book(row)
+                bk = Book(row, as_of_date=effective_date)
                 wanted = True
                 if filter_funcs:
                     for fn in filter_funcs:
@@ -144,6 +149,8 @@ def read_file(filename=None, filter_funcs=None, args=None):
                     yield bk
                 else:
                     logging.debug("Skipping %s" % (bk))
+            except NotOwnedAtSpecifiedDateError:
+                pass
             except Exception as err:
                 logging.error('Blew up on line %d: %s/%s' % (line_num, err, type(err)))
                 raise(err)

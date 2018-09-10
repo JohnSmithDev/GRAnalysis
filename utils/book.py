@@ -74,8 +74,13 @@ def sanitise_publisher(pub):
                                 ' Publishing', ' Publishers',
                                 ' Publishing Co', ' Publishing Group'))
 
+class NotOwnedAtSpecifiedDateError(Exception):
+    pass
+
 class Book(object):
-    def __init__(self, row_dict):
+    def __init__(self, row_dict, as_of_date=None):
+        self._as_of_date = as_of_date
+
         # Book specific stuff
         self.title = row_dict['Title'].strip()
         self.author = row_dict['Author'].strip()
@@ -110,6 +115,11 @@ class Book(object):
             self.rating = None
 
         self.date_added = date_from_string(row_dict['Date Added'])
+        if as_of_date and self.date_added > as_of_date:
+            raise NotOwnedAtSpecifiedDateError('Book %s was added at %s' %
+                                                   (self.title, self.date_added))
+
+
         self.date_read = date_from_string(row_dict['Date Read'])
         self.read_count = int(row_dict['Read Count'])
         if self.read_count > 0 and not self.date_read:
@@ -129,7 +139,16 @@ class Book(object):
 
     @property
     def is_read(self):
+        if self.date_read and self._as_of_date:
+            return self.was_read_by(self._as_of_date)
         return self.status == 'read'
+
+    def was_owned_by(self, dt):
+        # This assumes the object was created without an as_of_date arg
+        return self.date_added and self.date_added <= dt
+
+    def was_read_by(self, dt):
+        return self.date_read and self.date_read <= dt
 
     @property
     def is_unread(self):
@@ -259,23 +278,37 @@ class Book(object):
     def padded_rating_as_stars(self):
         return '%-5s' % (self.rating_as_stars)
 
+    def _calculate_days_on_tbr_pile(self, effective_date):
+            if self.was_read_by(effective_date):
+                days = (self.date_read - self.date_added).days
+                if days < 0:
+                    raise ValueError('%s has read date before add date' %
+                                     (self.title))
+                return days
+            else:
+                if not self.date_added or \
+                   (self.date_added > effective_date): # Q: Can this ever happen?
+                    raise ValueError('%s is read, but has missing or future add date' %
+                                     (self.title))
+                return (effective_date - self.date_added).days
+
+
     @property
     def days_on_tbr_pile(self):
-        if self.is_read:
-            if not self.date_added or not self.date_read:
-                raise ValueError('%s is read, but has missing add or read date' %
-                                 (self.title))
-            days = (self.date_read - self.date_added).days
-            if days < 0:
-                raise ValueError('%s has read date before add date' %
-                                 (self.title))
-            return days
+        if self._as_of_date:
+            # Sanity check - I don't think this could happen currently -
+            # NotOwnedAtSpecifiedDateError would be thrown in the constructor
+            if not self.was_owned_by(self._as_of_date):
+                raise ValueError('%s was not owned on %s'
+                                 (self.title, self._as_of_date))
+            return self._calculate_days_on_tbr_pile(self._as_of_date)
         else:
-            if not self.date_added or \
-               (self.date_added > TODAY): # Q: Can this ever happen?
-                raise ValueError('%s is read, but has missing or future add date' %
-                                 (self.title))
-            return (TODAY - self.date_added).days
+            if self.is_read:
+                if not self.date_added or not self.date_read:
+                    raise ValueError('%s is read, but has missing add or read date' %
+                                     (self.title))
+            return self._calculate_days_on_tbr_pile(TODAY)
+
 
     @property
     def additional_authors(self):

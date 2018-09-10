@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 
+from datetime import date
 import unittest
-from .. import export_reader
-from ..book import Book
 
+from ..book import Book, NotOwnedAtSpecifiedDateError
 
 class TestBook(unittest.TestCase):
 
@@ -130,6 +130,36 @@ class TestBook(unittest.TestCase):
         self.assertEqual(('Foo Chronicles', '1'), bk.series_and_volume)
         self.assertEqual('Foo Chronicles', bk.series)
         self.assertEqual('1', bk.volume_number)
+
+    def test_book_historical_before_added(self):
+        before_it_was_added = date(1980, 4, 1)
+
+        with self.assertRaises(NotOwnedAtSpecifiedDateError):
+            bk = Book(self.MOCK_BOOK, as_of_date=before_it_was_added)
+
+    def test_book_historical_after_added_before_read(self):
+        midpoint_time = date(2013, 4, 1)
+
+        bk = Book(self.MOCK_BOOK, as_of_date=midpoint_time)
+        self.assertFalse(bk.is_read)
+        # Q: Re. next line, this is current behaviour, but is it correct?
+        #    i.e. should bk.date_read be None instead?
+        self.assertEqual(date(2015, 12, 25), bk.date_read)
+
+        self.assertEqual(100, bk.days_on_tbr_pile) # Late 2012/12 - early 2013/04 = 3 +  bit months
+
+
+
+    def test_book_was_owned_or_read_by(self):
+        bk = Book(self.MOCK_BOOK)
+        self.assertFalse(bk.was_owned_by(date(2002, 2, 2)))
+        self.assertFalse(bk.was_read_by(date(2002, 2, 2)))
+
+        self.assertTrue(bk.was_owned_by(date(2013, 2, 2)))
+        self.assertFalse(bk.was_read_by(date(2013, 2, 2)))
+
+        self.assertTrue(bk.was_owned_by(date(2016, 2, 2)))
+        self.assertTrue(bk.was_read_by(date(2016, 2, 2)))
 
 
 if __name__ == '__main__':
