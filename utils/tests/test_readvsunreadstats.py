@@ -2,7 +2,8 @@
 
 import unittest
 
-from ..transformers import ReadVsUnreadStat, compare_rvustat, ReadVsUnreadStats
+from ..book import Book
+from ..transformers import ReadVsUnreadStat, compare_rvustat, ReadVsUnreadReport
 
 
 
@@ -31,5 +32,58 @@ class TestCompareRVUStat(unittest.TestCase):
         self.assertTrue(compare_rvustat(self.STAT_WITH_SAME_PERCENTAGE_AND_DIFFERENCE,
                                         self.PRIMARY_STAT) < 0)
 
+
+class MockBookForReadVsUnreadReport(object):
+    def __init__(self, keys, is_read):
+        self.keys = keys
+        self.is_read = is_read
+        self.is_unread = not is_read
+
+    def property_as_sequence(self, whatever):
+        for k in self.keys:
+            yield k
+
+MOCK_BOOKS = [
+    MockBookForReadVsUnreadReport(['foo'], True),
+    MockBookForReadVsUnreadReport(['bar'], True),
+    MockBookForReadVsUnreadReport(['baz'], True),
+
+    MockBookForReadVsUnreadReport(['foo'], True),
+    MockBookForReadVsUnreadReport(['bar'], True),
+    MockBookForReadVsUnreadReport(['baz'], False),
+
+    MockBookForReadVsUnreadReport(['foo'], False),
+    MockBookForReadVsUnreadReport(['bar'], True),
+    MockBookForReadVsUnreadReport(['baz'], False)
+]
+
+class TestReadVsUnreadReport(unittest.TestCase):
+    def test_init(self):
+        obj = ReadVsUnreadReport(MOCK_BOOKS, 'whatever')
+        self.assertEqual({'foo': 2, 'bar': 3, 'baz': 1}, obj.read_count)
+        self.assertEqual({'foo': 1, 'baz': 2}, obj.unread_count)
+        self.assertEqual({'foo': 3, 'bar': 3, 'baz': 3}, obj.grouping_count)
+
+    def test_process(self):
+        obj = ReadVsUnreadReport(MOCK_BOOKS, 'whatever').process()
+        # We sort both values here, because the order of the elements returned
+        # from .process() is arbitrary
+        self.assertEqual(sorted([ReadVsUnreadStat('baz', 33, -1),
+                          ReadVsUnreadStat('foo', 66, 1),
+                          ReadVsUnreadStat('bar', 100, 3)]),
+                          sorted(obj.stats))
+
+    def test_process(self):
+        obj = ReadVsUnreadReport(MOCK_BOOKS, 'whatever').process()
+
+        ret = []
+        def collate_strings(txt):
+            ret.append(txt)
+
+        obj.render(output_function=collate_strings)
+        self.assertEqual(['baz                            :    33%  -1   3',
+                          'foo                            :    66%  +1   3',
+                          'bar                            :   100%  +3   3'],
+                          ret)
 
 
