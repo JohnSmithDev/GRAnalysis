@@ -5,7 +5,7 @@ Classes/functions to transform raw data for reports
 
 from __future__ import division
 
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 from functools import cmp_to_key
 
 from utils.display import render_ratings_as_bar
@@ -18,7 +18,22 @@ from utils.display import render_ratings_as_bar
 #               * For group ranking, only having a single rank is not considered
 #                 sufficient representation to be meaningful
 
+ReadVsUnreadStat = namedtuple('ReadVsUnreadStat', 'key, percentage_read, difference')
+def compare_rvustat(a, b):
+    # print(a, b)
+    # return int(a[1] - b[1])
 
+    if a[1] == b[1]:
+        diff_difference = abs(b[2]) - abs(a[2])
+        if diff_difference == 0:
+            return 1 if a[0] > b[0] else -1 # Use the key as a last resort
+        else:
+            return diff_difference
+    else:
+        return a[1] - b[1]
+
+
+# TODO: rename to be less similar to the namedtuple above
 class ReadVsUnreadStats(object):
     def __init__(self, books, key_attribute, ignore_single_book_groups=True,
                  ignore_undefined_book_groups=True):
@@ -46,27 +61,15 @@ class ReadVsUnreadStats(object):
             if self.ignore_single_book_groups and (rd + ur) == 1:
                 continue
             try:
-                self.stats.append((key, int(100 * (rd / (rd+ur))) , rd - ur))
+                stat = ReadVsUnreadStat(key, int(100 * (rd / (rd+ur))) , rd - ur)
+                self.stats.append(stat)
             except ZeroDivisionError as err:
                 # Q: Can this actually happen, or am I just being over-paranoid?
                 logging.warning('%s has %d read, %d unread' % (key, rd, ur))
         return self # For method chaining
 
     def render(self, output_function=print):
-        def comparator(a, b):
-            # print(a, b)
-            # return int(a[1] - b[1])
-
-            if a[1] == b[1]:
-                diff_difference = abs(b[2]) - abs(a[2])
-                if diff_difference == 0:
-                    return 1 if a[0] > b[0] else -1 # Use the key as a last resort
-                else:
-                    return diff_difference
-            else:
-                return a[1] - b[1]
-
-        for stat in sorted(self.stats, key=cmp_to_key(comparator)):
+        for stat in sorted(self.stats, key=cmp_to_key(compare_rvustat)):
             output_function('%-30s : %5d%% %+3d %3d' % (str(stat[0])[:30], stat[1], stat[2],
                                              self.grouping_count[stat[0]]))
 
