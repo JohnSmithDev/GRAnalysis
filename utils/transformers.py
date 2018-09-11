@@ -20,7 +20,6 @@ from utils.display import render_ratings_as_bar
 
 ReadVsUnreadStat = namedtuple('ReadVsUnreadStat', 'key, percentage_read, difference')
 def compare_rvustat(a, b):
-
     if a.percentage_read == b.percentage_read:
         diff_difference = abs(b.difference) - abs(a.difference)
         if diff_difference == 0:
@@ -31,8 +30,7 @@ def compare_rvustat(a, b):
         return a.percentage_read - b.percentage_read
 
 
-# TODO: rename to be less similar to the namedtuple above
-class ReadVsUnreadStats(object):
+class ReadVsUnreadReport(object):
     def __init__(self, books, key_attribute, ignore_single_book_groups=True,
                  ignore_undefined_book_groups=True):
         # Would be nice to use counters, but I dunno if that's possible for two

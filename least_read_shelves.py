@@ -5,10 +5,10 @@ Show which shelves are least read (in terms of books read/books owned)
 
 from utils.arguments import parse_args
 from utils.export_reader import read_file
-from utils.transformers import ReadVsUnreadStats
+from utils.transformers import ReadVsUnreadReport
 
 if __name__ == '__main__':
     args = parse_args('Show which shelves are least read (in terms of books read/books owned)')
 
     books = read_file(args=args)
-    ReadVsUnreadStats(books, 'user_shelves').process().render()
+    ReadVsUnreadReport(books, 'user_shelves').process().render()

@@ -9,7 +9,7 @@ owned for most people.)
 
 from utils.arguments import create_parser, validate_args
 from utils.export_reader import read_file
-from utils.transformers import ReadVsUnreadStats
+from utils.transformers import ReadVsUnreadReport
 
 MAX_GAP_TO_REPORT_ON = 10
 
@@ -22,8 +22,8 @@ if __name__ == '__main__':
 
 
     books = read_file(args=args)
-    stats = ReadVsUnreadStats(books, 'year',
-                      ignore_single_book_groups=False)
+    stats = ReadVsUnreadReport(books, 'year',
+                               ignore_single_book_groups=False)
 
     stats.process().render()
 

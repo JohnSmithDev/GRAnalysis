@@ -9,12 +9,12 @@ data.  (May be available via the API though - I haven't checked?)
 
 from utils.arguments import parse_args
 from utils.export_reader import read_file
-from utils.transformers import ReadVsUnreadStats
+from utils.transformers import ReadVsUnreadReport
 
 if __name__ == '__main__':
    args = parse_args('Show which series are least read (in terms of books read/books owned)')
 
    books = read_file(args=args)
-   ReadVsUnreadStats(books, 'series',
+   ReadVsUnreadReport(books, 'series',
                      ignore_single_book_groups=True).process().render()
 
