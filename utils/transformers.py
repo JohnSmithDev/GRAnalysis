@@ -20,17 +20,15 @@ from utils.display import render_ratings_as_bar
 
 ReadVsUnreadStat = namedtuple('ReadVsUnreadStat', 'key, percentage_read, difference')
 def compare_rvustat(a, b):
-    # print(a, b)
-    # return int(a[1] - b[1])
 
-    if a[1] == b[1]:
-        diff_difference = abs(b[2]) - abs(a[2])
+    if a.percentage_read == b.percentage_read:
+        diff_difference = abs(b.difference) - abs(a.difference)
         if diff_difference == 0:
-            return 1 if a[0] > b[0] else -1 # Use the key as a last resort
+            return 1 if a.key > b.key else -1 # Use the key as a last resort
         else:
             return diff_difference
     else:
-        return a[1] - b[1]
+        return a.percentage_read - b.percentage_read
 
 
 # TODO: rename to be less similar to the namedtuple above
