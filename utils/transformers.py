@@ -72,47 +72,67 @@ class ReadVsUnreadReport(object):
 
 
 
+class BestRankedReport(object):
+
+    def __init__(self, books, key_attribute,
+                       ignore_single_book_groups=False,
+                       ignore_undefined_book_groups=True):
+        self.ignore_single_book_groups = ignore_single_book_groups
+
+        self.read_count = defaultdict(int)
+        self.cumulative_rating = defaultdict(int)
+
+
+
+        # TODO: This seems an ideal use case for NamedTuple
+        self.rating_groupings = defaultdict(lambda: [None, 0,0,0,0,0])
+        for book in books:
+            br = book.rating
+            if br:
+                for key in book.property_as_sequence(key_attribute):
+                    if key or not ignore_undefined_book_groups:
+                        self.read_count[key] += 1
+                        self.cumulative_rating[key] += br
+                        self.rating_groupings[key][br] += 1
+
+    def process(self):
+        self.stats = []
+        for k, rdr in self.read_count.items():
+            rd = self.read_count[k] # Q: isn't this the same as rdr?
+            av = self.cumulative_rating[k] / rd
+            self.stats.append((k, av , rd))
+        return self # For method chaining
+
+    def render(self, output_function=print, sort_by_ranking=True):
+        def comparator(a, b):
+            if a[1] == b[1]:
+                return abs(b[2]) - abs(a[2])
+            else:
+                return int(1000 * (b[1] - a[1])) # Has to be an int for some reason
+
+        if sort_by_ranking:
+            sorting_key=cmp_to_key(comparator)
+        else:
+            # Sort by name order
+            sorting_key=lambda z: z[0]
+        for stat in sorted(self.stats, key=sorting_key):
+            # Standard deviation would be good too, to gauge (un)reliability
+            bars = render_ratings_as_bar(self.rating_groupings[stat[0]])
+
+            if not self.ignore_single_book_groups or stat[2] > 1:
+                output_function('%-30s : %.2f %4d %s' % (stat[0], stat[1], stat[2], bars))
+
+
 def best_ranked_report(books, key_attribute, output_function=print, sort_by_ranking=True,
                        ignore_single_book_groups=False,
                        ignore_undefined_book_groups=True):
-    read_count = defaultdict(int)
-    cumulative_rating = defaultdict(int)
-
-    # TODO: This seems an ideal use case for NamedTuple
-    rating_groupings = defaultdict(lambda: [None, 0,0,0,0,0])
-    for book in books:
-        br = book.rating
-        if br:
-            for key in book.property_as_sequence(key_attribute):
-                if key or not ignore_undefined_book_groups:
-                    read_count[key] += 1
-                    cumulative_rating[key] += br
-                    rating_groupings[key][br] += 1
-
-    stats = []
-    for k, rdr in read_count.items():
-        rd = read_count[k]
-        av = cumulative_rating[k] / rd
-        stats.append((k, av , rd))
-
-    def comparator(a, b):
-        if a[1] == b[1]:
-            return abs(b[2]) - abs(a[2])
-        else:
-            return int(1000 * (b[1] - a[1])) # Has to be an int for some reason
 
 
-    if sort_by_ranking:
-        sorting_key=cmp_to_key(comparator)
-    else:
-        # Sort by name order
-        sorting_key=lambda z: z[0]
-    for stat in sorted(stats, key=sorting_key):
-        # Standard deviation would be good too, to gauge (un)reliability
-        bars = render_ratings_as_bar(rating_groupings[stat[0]])
+    brr = BestRankedReport(books, key_attribute, ignore_single_book_groups,
+                           ignore_undefined_book_groups)
+    brr.process()
+    brr.render(output_function, sort_by_ranking)
 
-        if not ignore_single_book_groups or stat[2] > 1:
-            output_function('%-30s : %.2f %4d %s' % (stat[0], stat[1], stat[2], bars))
 
 
 def get_keys_to_books_dict(books, key_attribute, output_function=print, sort_by_ranking=True,
