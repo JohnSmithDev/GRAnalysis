@@ -148,8 +148,6 @@ class TestBook(unittest.TestCase):
 
         self.assertEqual(100, bk.days_on_tbr_pile) # Late 2012/12 - early 2013/04 = 3 +  bit months
 
-
-
     def test_book_was_owned_or_read_by(self):
         bk = Book(self.MOCK_BOOK)
         self.assertFalse(bk.was_owned_by(date(2002, 2, 2)))
@@ -161,6 +159,11 @@ class TestBook(unittest.TestCase):
         self.assertTrue(bk.was_owned_by(date(2016, 2, 2)))
         self.assertTrue(bk.was_read_by(date(2016, 2, 2)))
 
+    def test_unrated_book(self):
+        bdict = self.MOCK_BOOK.copy()
+        bdict['My Rating'] = '0'
+        bk = Book(bdict)
+        self.assertIsNone(bk.rating)
 
 if __name__ == '__main__':
     unittest.main()

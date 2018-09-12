@@ -111,7 +111,7 @@ class Book(object):
         self.status = row_dict['Exclusive Shelf']
         self._raw_shelves = row_dict['Bookshelves']
         self.rating = int(row_dict['My Rating'])
-        if self.rating == '0':
+        if self.rating == 0:
             self.rating = None
 
         self.date_added = date_from_string(row_dict['Date Added'])
