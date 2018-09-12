@@ -74,10 +74,10 @@ class ReadVsUnreadReport(object):
 BestRankedStat = namedtuple('BestRankedStat',
                             'key, average_rating, number_of_books_rated')
 def compare_brstat(a, b):
-    if a[1] == b[1]:
-        return abs(b[2]) - abs(a[2])
+    if a.average_rating == b.average_rating:
+        return b.number_of_books_rated - a.number_of_books_rated
     else:
-        return int(1000 * (b[1] - a[1])) # Has to be an int for some reason
+        return int(1000 * (b.average_rating - a.average_rating)) # Has to be an int for some reason
 
 class BestRankedReport(object):
 
@@ -86,7 +86,7 @@ class BestRankedReport(object):
                        ignore_undefined_book_groups=True):
         self.ignore_single_book_groups = ignore_single_book_groups
 
-        self.read_count = defaultdict(int) # TODO: rename as rated_count
+        self.rated_count = defaultdict(int) # TODO: rename as rated_count
         self.cumulative_rating = defaultdict(int)
         # TODO (maybe): could/should this be a namedtuple or class?
         self.rating_groupings = defaultdict(lambda: [None, 0,0,0,0,0])
@@ -96,17 +96,16 @@ class BestRankedReport(object):
             if br:
                 for key in book.property_as_sequence(key_attribute):
                     if key or not ignore_undefined_book_groups:
-                        self.read_count[key] += 1
+                        self.rated_count[key] += 1
                         self.cumulative_rating[key] += br
                         self.rating_groupings[key][br] += 1
 
     def process(self):
         self.stats = []
-        for k, rdr in self.read_count.items():
-            rd = self.read_count[k] # Q: isn't this the same as rdr?
-            av = self.cumulative_rating[k] / rd
-            if not self.ignore_single_book_groups or rd > 1:
-                self.stats.append((k, av , rd))
+        for k, rdr in self.rated_count.items():
+            av = self.cumulative_rating[k] / rdr
+            if not self.ignore_single_book_groups or rdr > 1:
+                self.stats.append(BestRankedStat(k, av, rdr))
         return self # For method chaining
 
     def render(self, output_function=print, sort_by_ranking=True,
@@ -115,15 +114,16 @@ class BestRankedReport(object):
             sorting_key=cmp_to_key(compare_brstat)
         else:
             # Sort by name order
-            sorting_key=lambda z: z[0]
+            sorting_key=lambda z: z.key
 
         for stat in sorted(self.stats, key=sorting_key):
             # Standard deviation would be good too, to gauge (un)reliability
             if output_bars:
-                bars = ' ' + render_ratings_as_bar(self.rating_groupings[stat[0]])
+                bars = ' ' + render_ratings_as_bar(self.rating_groupings[stat.key])
             else:
                 bars = ''
-            output_function('%-30s : %.2f %4d%s' % (stat[0], stat[1], stat[2], bars))
+            output_function('%-30s : %.2f %4d%s' % (stat.key, stat.average_rating,
+                                                    stat.number_of_books_rated, bars))
 
 
 def best_ranked_report(books, key_attribute, output_function=print, sort_by_ranking=True,

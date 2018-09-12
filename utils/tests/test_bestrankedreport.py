@@ -53,7 +53,7 @@ MOCK_BOOKS = [
 class TestBestRankedReport(unittest.TestCase):
     def test_init(self):
         obj = BestRankedReport(MOCK_BOOKS, 'whatever')
-        self.assertEqual({'foo': 2, 'bar': 3, 'baz': 3}, obj.read_count)
+        self.assertEqual({'foo': 2, 'bar': 3, 'baz': 3}, obj.rated_count)
         self.assertEqual({'foo': 5, 'bar': 8, 'baz': 11}, obj.cumulative_rating)
         self.assertEqual({'foo': [None, 1, 0, 0, 1, 0],
                           'bar': [None, 0, 1, 2, 0, 0],
