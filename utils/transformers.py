@@ -72,7 +72,7 @@ class ReadVsUnreadReport(object):
 
 
 BestRankedStat = namedtuple('BestRankedStat',
-                            'key, average_rating difference, number_of_books_read')
+                            'key, average_rating, number_of_books_rated')
 def compare_brstat(a, b):
     if a[1] == b[1]:
         return abs(b[2]) - abs(a[2])
@@ -86,7 +86,7 @@ class BestRankedReport(object):
                        ignore_undefined_book_groups=True):
         self.ignore_single_book_groups = ignore_single_book_groups
 
-        self.read_count = defaultdict(int)
+        self.read_count = defaultdict(int) # TODO: rename as rated_count
         self.cumulative_rating = defaultdict(int)
         # TODO (maybe): could/should this be a namedtuple or class?
         self.rating_groupings = defaultdict(lambda: [None, 0,0,0,0,0])
@@ -109,7 +109,8 @@ class BestRankedReport(object):
                 self.stats.append((k, av , rd))
         return self # For method chaining
 
-    def render(self, output_function=print, sort_by_ranking=True):
+    def render(self, output_function=print, sort_by_ranking=True,
+               output_bars=True):
         if sort_by_ranking:
             sorting_key=cmp_to_key(compare_brstat)
         else:
@@ -118,8 +119,11 @@ class BestRankedReport(object):
 
         for stat in sorted(self.stats, key=sorting_key):
             # Standard deviation would be good too, to gauge (un)reliability
-            bars = render_ratings_as_bar(self.rating_groupings[stat[0]])
-            output_function('%-30s : %.2f %4d %s' % (stat[0], stat[1], stat[2], bars))
+            if output_bars:
+                bars = ' ' + render_ratings_as_bar(self.rating_groupings[stat[0]])
+            else:
+                bars = ''
+            output_function('%-30s : %.2f %4d%s' % (stat[0], stat[1], stat[2], bars))
 
 
 def best_ranked_report(books, key_attribute, output_function=print, sort_by_ranking=True,
