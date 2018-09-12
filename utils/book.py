@@ -34,6 +34,11 @@ def date_from_string(ds):
     else:
         return None
 
+def _formatted_month(dt, separator='-'):
+        return '%04d%s%02d' % (dt.year, separator,
+                               dt.month)
+
+
 def nullable_int(s):
     """Convert a string into an integer, or None if it is an empty string."""
     if s:
@@ -165,7 +170,16 @@ class Book(object):
     def month_read(self):
         if not self.date_read:
             return None
-        return '%04d-%02d' % (self.date_read.year, self.date_read.month)
+        return _formatted_month(self.date_read)
+
+
+    @property
+    def year_added(self):
+        return self.date_added.year
+
+    @property
+    def month_added(self):
+        return _formatted_month(self.date_added)
 
     @property
     def clean_title(self):

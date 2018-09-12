@@ -36,6 +36,8 @@ class TestBook(unittest.TestCase):
         self.assertEqual('2000s', bk.decade)
         self.assertEqual(2015, bk.year_read)
         self.assertEqual('2015-12', bk.month_read)
+        self.assertEqual(2012, bk.year_added)
+        self.assertEqual('2012-12', bk.month_added)
         self.assertEqual('100-149', bk.pagination_range)
         self.assertEqual('****', bk.rating_as_stars)
         self.assertEqual('**** ', bk.padded_rating_as_stars)
