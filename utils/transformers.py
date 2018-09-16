@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Classes/functions to transform raw data for reports
+Classes/functions to transform raw data for reports - perhaps 'engines' might
+be a better name?
 """
 
 from __future__ import division
@@ -101,6 +102,8 @@ class BestRankedReport(object):
                         self.rating_groupings[key][br] += 1
 
     def process(self):
+        # TODO (maybe): Should ingore_single_book_groups be an argument here,
+        #               rather than in the constructor?
         self.stats = []
         for k, rdr in self.rated_count.items():
             av = self.cumulative_rating[k] / rdr
@@ -129,8 +132,6 @@ class BestRankedReport(object):
 def best_ranked_report(books, key_attribute, output_function=print, sort_by_ranking=True,
                        ignore_single_book_groups=False,
                        ignore_undefined_book_groups=True):
-
-
     brr = BestRankedReport(books, key_attribute, ignore_single_book_groups,
                            ignore_undefined_book_groups)
     brr.process()
@@ -138,9 +139,8 @@ def best_ranked_report(books, key_attribute, output_function=print, sort_by_rank
 
 
 
-def get_keys_to_books_dict(books, key_attribute, output_function=print, sort_by_ranking=True,
-                       ignore_single_book_groups=False,
-                       ignore_undefined_book_groups=True):
+def get_keys_to_books_dict(books, key_attribute,
+                           ignore_undefined_book_groups=True):
     """
     Return a dictionary mapping some keys (e.g. shelves, dictionaries, etc)
     to sets of Books
