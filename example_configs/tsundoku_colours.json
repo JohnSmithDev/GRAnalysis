@@ -17,6 +17,11 @@
     "fg": "lightblack",
     "ch": "\ud83d\ude80\u200b"
   }],
+  ["fantasy", {
+    "bg": "green",
+    "fg": "white",
+    "ch": "\ud83d\udee1 "
+  }],
   ["science-fiction", {
     "bg": "blue",
     "fg": "lightwhite",
@@ -38,14 +43,14 @@
     "ch": "\ud83d\udcbb\u200b"
   }],
   ["non-fiction", {
-    "bg": "green"
+    "fg": "black",
+    "bg": "lightyellow"
   }],
 
   ["british-author", {
     "ch": "\ud83d\udfa2 ",
     "fg": "lightred"
   }],
-
 
   ["1940s", {
     "ch": "40",
