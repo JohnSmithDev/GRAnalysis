@@ -8,10 +8,17 @@ in ~20 years...)
 
 import logging
 
-from colorama import Fore, Back, Style
+try:
+    from colorama import Fore, Back, Style
+    COLOUR_AVAILABLE = True
+except ImportError:
+    COLOUR_AVAILABLE = False
+    class Dummy(object):
+        def __getattribute__(self, name):
+            return ''
+    Fore = Back = Style = Dummy()
 
 COLORAMA_RESET = Fore.RESET + Back.RESET + Style.RESET_ALL
-
 
 
 class ColoramaCanvas(object):
@@ -82,13 +89,21 @@ class ColoramaCanvas(object):
         self._output(text)
         self.move_to(self.cursor_x, self.cursor_y + 1)
 
+    def print_reset(self, additional_string=''):
+        try:
+            self.print(COLORAMA_RESET + additional_string)
+        except TypeError: # If these are None - probably irrelevant now,
+            # as the dummy returns empty string instead of None
+            self.print(additional_string)
+
+
     def move_to(self, x, y):
         self.cursor_x = x
         self.cursor_y = y
 
     def render(self):
         for _ in range(self.y_padding):
-            print(COLORAMA_RESET_STRING)
+            self.print_reset()
         for y in range(self.height):
             bits = []
             for x in range(self.width):
@@ -102,11 +117,16 @@ class ColoramaCanvas(object):
             self.output_function(line)
         self.reset_style()
         for _ in range(self.y_padding):
-            print(COLORAMA_RESET)
+            self.print_reset()
+        else:
+            self.finish()
 
     def clear(self):
         # https://stackoverflow.com/questions/2084508/clear-terminal-in-python
         self.output_function(chr(27) + '[2J')
+
+    def finish(self):
+        print(COLORAMA_RESET)
 
 
 if __name__ == '__main__':

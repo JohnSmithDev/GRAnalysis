@@ -2,17 +2,11 @@
 
 import json
 
-try:
-    from colorama import Fore, Back, Style
-    COLOUR_AVAILABLE = True
-except ImportError:
-    COLOUR_AVAILABLE = False
+from utils.colorama_canvas import Fore, Back, Style
 
-DEFAULT_WIDTH = 50
-
-
-def render_ratings_as_bar(ratings, width=DEFAULT_WIDTH,
-                          use_unicode=True, use_colour=COLOUR_AVAILABLE):
+DEFAULT_BAR_WIDTH = 50
+def render_ratings_as_bar(ratings, width=DEFAULT_BAR_WIDTH,
+                          use_unicode=True, use_colour=True):
     """
     Given a list of star-rating counts, return a string of desired length
     representing the distribution of ratings.
@@ -40,7 +34,6 @@ def render_ratings_as_bar(ratings, width=DEFAULT_WIDTH,
                      Fore.LIGHTMAGENTA_EX][num], Style.RESET_ALL)
         else:
             return ('', '')
-
 
     # Note: this feels somewhat overdone - I'd not be in the least bit
     #       surprised if there's a far simpler implementation.
@@ -120,52 +113,46 @@ def translate_char(ch):
     # perhaps we might need to do more (e.g. for non-colour rendering?)
     return ch
 
-
-
-
 class ColourConfig(object):
+    """
+    Adapter between the JSON colour config and colorama.
+    """
 
     def __init__(self, json_data):
         self.colour_cfg = json.load(json_data)
         self.colour_guide = {}
 
     def get_colour_bits(self, shelf_tuple):
-        if COLOUR_AVAILABLE:
-            fore = Fore.WHITE
-            back = Back.LIGHTBLACK_EX
-            style = ''
+        fore = Fore.WHITE
+        back = Back.LIGHTBLACK_EX
+        style = ''
         ch = DEFAULT_CHAR
         used_bits = {}
         for colour_rule, values in self.colour_cfg[::-1]:
             if colour_rule in shelf_tuple:
-                if COLOUR_AVAILABLE:
-                    if 'fg' in values:
-                        fore = translate_colour(values['fg'], Fore)
-                        used_bits['fg'] = colour_rule
-                    if 'bg' in values:
-                        back = translate_colour(values['bg'], Back)
-                        used_bits['bg'] = colour_rule
-                    if 'st' in values:
-                        style = translate_style(values['style'])
-                        used_bits['st'] = colour_rule
+                if 'fg' in values:
+                    fore = translate_colour(values['fg'], Fore)
+                    used_bits['fg'] = colour_rule
+                if 'bg' in values:
+                    back = translate_colour(values['bg'], Back)
+                    used_bits['bg'] = colour_rule
+                if 'st' in values:
+                    style = translate_style(values['style'])
+                    used_bits['st'] = colour_rule
                 if 'ch' in values:
                     ch = translate_char(values['ch'])
                     used_bits['ch'] = colour_rule
-        if COLOUR_AVAILABLE:
-            blob_bits = (fore, back, style, ch)
-            blob = self._blobbify(blob_bits)
+        blob_bits = (fore, back, style, ch)
+        blob = self._blobbify(blob_bits)
 
-            relevant_shelves = sorted(set(used_bits.values()))
-            self.colour_guide[' / '.join(relevant_shelves)] = blob
+        relevant_shelves = sorted(set(used_bits.values()))
+        self.colour_guide[' / '.join(relevant_shelves)] = blob
 
-            return blob_bits
-        else:
-            return ch
+        return blob_bits
 
     def _blobbify(self, blob_bits):
         blob = ''.join([z for z in blob_bits if z])
-        if COLOUR_AVAILABLE:
-            blob += Style.RESET_ALL
+        blob += Style.RESET_ALL
         return blob
 
     def get_colour_blob(self, shelf_tuple):

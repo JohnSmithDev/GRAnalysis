@@ -10,18 +10,12 @@ from collections import defaultdict, namedtuple
 import pdb
 import sys
 
-try:
-    from colorama import Fore, Back, Style
-    COLOUR_AVAILABLE = True
-except ImportError:
-    COLOUR_AVAILABLE = False
-
 from utils.arguments import parse_args
-from utils.colorama_canvas import ColoramaCanvas, COLORAMA_RESET
+from utils.colorama_canvas import ColoramaCanvas, Fore, Back, Style
 
 GROUP_BY_COLOURS = True
 
-COLUMN_WIDTH = 2 # in characters
+COLUMN_WIDTH = 2 # in characters - TOOD: this should be in the colour config
 
 
 Count = namedtuple('Count', 'key, count')
@@ -102,9 +96,15 @@ def _squash_calculation(number, target):
 def squash(key_to_books_dict, max_height=None):
     """
     Given a dict of keys->set(Book), split up the larger ones so that no value
-    exceeds target_height.
+    exceeds target_height, returning a list of Count(key, quantity)
     If max_height is not specified, then a - hopefully - reasonable value
     is calculated.
+
+    TODO (probably): although this is fine for our text/terminal rendering,
+                     it would be good to have a version that returns
+                     key->list-of-books rather than just Counts, so that we
+                     could render the individual book covers, have tooltips etc
+                     for web rendering or similar.
     """
     counts = [Count(k, len(v)) for k, v in key_to_books_dict.items()]
 
@@ -298,7 +298,7 @@ class Tsundoku(object):
             """
 
     def output_colour_key(self):
-        print('\n%sColour key:' % (COLORAMA_RESET))
+        print('Colour key:')
         for shelves, colour in sorted(self.col_cfg.colour_guide.items(),
                                       key=lambda z: z[0]):
             if not shelves:
