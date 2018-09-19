@@ -92,7 +92,7 @@ STYLE_MAPPINGS = {
     # TODO: maybe (unlike the colours, these seem reasonable)
 }
 
-DEFAULT_CHAR = '\u259a\u259a' # checkerboard-like
+DEFAULT_CHAR = '\u259a' # checkerboard-like
 
 def translate_colour(col, fb=Fore):
     col = col.upper()
@@ -116,19 +116,36 @@ def translate_char(ch):
 class ColourConfig(object):
     """
     Adapter between the JSON colour config and colorama.
+    Q: should category be a mandatory constructor argument?  Currently things
+       will blow up if it isn't provided, but I could imagine cases where
+       it isn't relevant. Update: currently the way this is created from
+       within the argument parsing code means we can't pass it to the
+       constructor (easily?)
     """
 
-    def __init__(self, json_data):
+    def __init__(self, json_data, category=None):
         self.colour_cfg = json.load(json_data)
         self.colour_guide = {}
+        self.select_category(category)
+
+    def select_category(self, category):
+        self.category = category
+        return self
+
+    @property
+    def item_width(self):
+        cfg = self.colour_cfg['categories'][self.category]
+        return cfg['width']
 
     def get_colour_bits(self, shelf_tuple):
+        cfg = self.colour_cfg['categories'][self.category]
+
         fore = Fore.WHITE
         back = Back.LIGHTBLACK_EX
         style = ''
-        ch = DEFAULT_CHAR
+        ch = DEFAULT_CHAR * self.item_width
         used_bits = {}
-        for colour_rule, values in self.colour_cfg[::-1]:
+        for colour_rule, values in cfg['mappings'][::-1]:
             if colour_rule in shelf_tuple:
                 if 'fg' in values:
                     fore = translate_colour(values['fg'], Fore)

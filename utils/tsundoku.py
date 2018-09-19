@@ -15,9 +15,6 @@ from utils.colorama_canvas import ColoramaCanvas, Fore, Back, Style
 
 GROUP_BY_COLOURS = True
 
-COLUMN_WIDTH = 2 # in characters - TOOD: this should be in the colour config
-
-
 Count = namedtuple('Count', 'key, count')
 Aggregates = namedtuple('Aggregates', 'max_count, num_columns, total')
 
@@ -191,8 +188,8 @@ class Tsundoku(object):
                                               self.read_aggregates.max_count)))
 
         height = self.unread_aggregates.max_count + self.read_aggregates.max_count + 1
-        chart_width = COLUMN_WIDTH * max(self.unread_aggregates.num_columns,
-                                         self.read_aggregates.num_columns)
+        chart_width = self.col_cfg.item_width * max(self.unread_aggregates.num_columns,
+                                                    self.read_aggregates.num_columns)
         width = chart_width + offset_for_y_axis_label
         ground_level = self.unread_aggregates.max_count + 1 # This is like the x-axis of a graph
 

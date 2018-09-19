@@ -13,7 +13,8 @@ if __name__ == '__main__':
                       'aka Mount Tsundoku, colour coded by shelves',
                       'cdf')
 
-    t = Tsundoku(args.colour_cfg, 'user_shelves')
+    col_cfg = args.colour_cfg.select_category('shelves')
+    t = Tsundoku(col_cfg, 'user_shelves')
     t.process(read_file(args=args))
     t.postprocess()
     t.render()
