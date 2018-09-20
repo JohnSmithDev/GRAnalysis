@@ -100,8 +100,13 @@ class TestCreateComparisonFilter(unittest.TestCase):
         self.assertTrue(fltr1(MOCK_BOOK))
 
     def test_regex_negative(self):
-        fltr1 = export_reader.create_comparison_filter('title', '~', 'Mook')
-        self.assertFalse(fltr1(MOCK_BOOK))
+        fltr1 = export_reader.create_comparison_filter('title', '~!', 'Zonk')
+        self.assertTrue(fltr1(MOCK_BOOK))
+        fltr2 = export_reader.create_comparison_filter('title', '!~', 'Zonk')
+        self.assertTrue(fltr2(MOCK_BOOK))
+        fltr3 = export_reader.create_comparison_filter('title', '!~', 'Book')
+        self.assertFalse(fltr3(MOCK_BOOK))
+
 
     def test_greaterthan(self):
         fltr1 = export_reader.create_comparison_filter('pagination', '>', '122')

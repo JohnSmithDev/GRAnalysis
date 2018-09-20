@@ -14,8 +14,6 @@ import sys
 from utils.book import Book, date_from_string, NotOwnedAtSpecifiedDateError
 
 
-TODAY = date.today() # Assumption: anything using this lib will never run over multiple days
-
 # Q: Does this affect logging behaviour in other modules?  (I tried setting
 # up a custom logger, but it was ****ing me around, and I couldn't be ****d
 # to fix it properly)
@@ -63,6 +61,8 @@ def create_comparison_filter(property, comparison, string_value):
 
         if actual_vals and actual_vals[0]:
             type_to_cast_to = type(actual_vals[0])
+            # TODO: something similar for boolean properties, although
+            # we also need to change the comparisons below from = to is...
             if type_to_cast_to == date:
                 value = date_from_string(string_value)
             else:
@@ -86,6 +86,11 @@ def create_comparison_filter(property, comparison, string_value):
                 if re.search(value, av, re.IGNORECASE):
                     return True
             return False
+        elif comparison in ('~!', '!~'):
+            for av in actual_vals:
+                if re.search(value, av, re.IGNORECASE):
+                    return False
+            return True
         elif comparison == '>':
             return actual_val > value
         elif comparison in ('>=', '=>'):
