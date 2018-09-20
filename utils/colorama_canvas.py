@@ -6,6 +6,7 @@ Library to output colo(u)rized text at any point across a canvas.
 in ~20 years...)
 """
 
+from collections import namedtuple
 import logging
 
 try:
@@ -18,8 +19,19 @@ except ImportError:
             return ''
     Fore = Back = Style = Dummy()
 
+
 COLORAMA_RESET = Fore.RESET + Back.RESET + Style.RESET_ALL
 
+# roygbiv-ish
+FG_RAINBOW = [Fore.LIGHTRED_EX, Fore.RED, Fore.LIGHTYELLOW_EX,
+              Fore.LIGHTGREEN_EX, Fore.LIGHTCYAN_EX, Fore.BLUE,
+              Fore.MAGENTA]
+BG_RAINBOW = [Back.LIGHTRED_EX, Back.RED, Back.LIGHTYELLOW_EX,
+              Back.LIGHTGREEN_EX, Back.LIGHTCYAN_EX, Back.BLUE,
+              Back.MAGENTA]
+
+
+ColourTextObject = namedtuple('ColourTextObject', 'fg, bg, style, text')
 
 class ColoramaCanvas(object):
 
