@@ -232,12 +232,20 @@ class Book(object):
                 all_bits = series_regex.group(1)
                 number_regex = re.search('^(.*[^,]),? (#|Book |Trilogy )([\d\-]+)$', all_bits)
                 if number_regex:
+                    # volume_prefix isn't currently used (or useful?)
                     series_name, volume_prefix, volume_number = (number_regex.group(1),
                                                                  number_regex.group(2),
                                                                  number_regex.group(3))
                 else:
-                    series_name = all_bits
-                    volume_number = None
+                    # Try without a volume prefix - can't do this in the prior
+                    # regex as the empty value will beat "Book ' etc
+                    number_regex = re.search('^(.*[^,]),? ([\d\-]+)$', all_bits)
+                    if number_regex:
+                        series_name, volume_number = (number_regex.group(1),
+                                                      number_regex.group(2))
+                    else:
+                        series_name = all_bits
+                        volume_number = None
                 if strip_trilogy_etc:
                     series_name = self._strip_trilogy_etc(series_name)
                 return series_name.strip(), volume_number

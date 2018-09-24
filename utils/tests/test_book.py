@@ -80,6 +80,15 @@ class TestBook(unittest.TestCase):
         self.assertEqual('Overlong Fantasy Series', bk.series)
         self.assertEqual('14', bk.volume_number)
 
+    def test_book_in_series_no_comma_or_hash(self):
+        # e.g. 'Robots and Empire (Robot 4)'
+        bdict = self.MOCK_BOOK.copy()
+        bdict['Title'] = 'The Cliche of Cliches (Overlong Fantasy Series 33)'
+        bk = Book(bdict)
+        self.assertEqual(('Overlong Fantasy Series', '33'), bk.series_and_volume)
+        self.assertEqual('Overlong Fantasy Series', bk.series)
+        self.assertEqual('33', bk.volume_number)
+
     def test_book_in_series_trilogy(self):
         # e.g. "Annihilation (Southern Reach Trilogy 1)"
         bdict = self.MOCK_BOOK.copy()
