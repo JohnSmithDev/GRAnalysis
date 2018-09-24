@@ -97,6 +97,12 @@ class Book(object):
         self.raw_publisher = sanitise_publisher(row_dict['Publisher'])
         self.publisher = sanitise_publisher(self.raw_publisher)
         self.year_published = nullable_int(row_dict['Year Published'])
+        if self.originally_published_year and self.year_published and \
+           self.originally_published_year > self.year_published:
+            self._warn('%s has original year (%d) later than edition year (%d)' %
+                       (self.title, self.originally_published_year,
+                        self.year_published))
+
         try:
             self.pagination = int(row_dict['Number of Pages'])
         except ValueError as err:
@@ -273,6 +279,10 @@ class Book(object):
 
     @property
     def year(self):
+        # Pick the earliest, which *should* be originally_..., but isn't
+        # always e.g. 'Dogs of War' by Adrian Tchaikovsky
+        if self.originally_published_year and self.year_published:
+            return min(self.originally_published_year, self.year_published)
         if self.originally_published_year:
             return self.originally_published_year
         elif self.year_published:
