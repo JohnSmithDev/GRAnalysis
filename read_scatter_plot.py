@@ -13,20 +13,24 @@ following notable differences:
 from collections import defaultdict
 from datetime import date
 import pdb
+from shutil import get_terminal_size
 
 from utils.arguments import parse_args
 from utils.colorama_canvas import (ColoramaCanvas, Fore, Back, Style,
-                                   FG_RAINBOW, ColourTextObject)
+                                   ColourTextObject)
 from utils.colour_coding import rating_to_colours
-from utils.date_related import MONTH_LETTERS
+from utils.date_related import MONTH_LETTERS, MONTH_ABBREVIATIONS
 from utils.export_reader import read_file, only_read_books
 
+SPACE_FOR_PUBLICATION_YEAR_LABELS = 5 # yyyy plus a space
+SPACE_FOR_READ_DATE_LABELS = 2 # lines for year and month
+BAND_HEIGHT = 5 # in characters
+YEAR_WIDTHS = (4,6,12,24,36,48,60,72) # in characters
 
-# GROUPINGS = (1, 5, 10, 50, 100)
-GROUPINGS = (5, 10, 50, 100)
+# There is no point having a grouping value smaller than BAND_HEIGHT, as
+# the export only has publication year, not publication date
+PUBLICATION_YEAR_GROUPINGS = (5, 10, 50, 100)
 
-def year_to_decade(y):
-    return (y // 10) * 10
 
 def year_to_grouping_start(y, g):
     return (y // g) * g
@@ -35,21 +39,38 @@ def year_to_group_of_years(y, g):
     start = year_to_grouping_start(y, g)
     return range(start, start + g)
 
-def merge_years(time_groups, max_in_group):
+def merge_years(year_counts, max_in_group, year_groupings=None):
+    """
+    Given a dict mapping years to quantities, return a tuple containing:
+    * list of (start_year, end_year) tuples, where the specified inclusive
+      range has no more than max_in_group elements
+    * dict mapping years to data related to the previous element
+    (The dict is a convenience to save the caller re-deriving the info from
+     the list)
+
+    year_groupings defines the granularity of ranges that can be merged to
+    e.g. 5 years, 10 years, etc
+
+    This is a crude implementation that destroys year_counts; I'm sure it
+    could be done much better with a bit of extra thinking.
+    """
+
+    if year_groupings is None:
+        year_groupings = PUBLICATION_YEAR_GROUPINGS
     ranges = []
     year_to_ranges = {}
-    years_and_counts = sorted(time_groups.items())
+    years_and_counts = sorted(year_counts.items())
     dont_go_earlier_than = None
     for year, count in years_and_counts:
-        if year not in time_groups:
+        if year not in year_counts:
             # Assume it has already been merged
             # print('Skipping %d' % (year))
             continue
         # best_so_far = [year]
-        best_so_far = year_to_group_of_years(year, GROUPINGS[0])
-        for grouping in GROUPINGS[1:]:
+        best_so_far = year_to_group_of_years(year, year_groupings[0])
+        for grouping in year_groupings[1:]:
             years = year_to_group_of_years(year, grouping)
-            total = sum(time_groups[z] for z in years)
+            total = sum(year_counts[z] for z in years)
             if total > max_in_group or dont_go_earlier_than in years:
                 break
             best_so_far = years
@@ -57,11 +78,12 @@ def merge_years(time_groups, max_in_group):
         ranges.append(r)
         for y in best_so_far:
             year_to_ranges[y] = (len(ranges)-1, r[0], r[1]-r[0]+1 )
-            del time_groups[y]
+            del year_counts[y]
         dont_go_earlier_than = max(best_so_far)
 
     # print(year_to_ranges)
     return ranges, year_to_ranges
+
 
 class ScatterPlot(object):
 
@@ -77,27 +99,19 @@ class ScatterPlot(object):
         self.min_chart_date = date(self.min_read_date.year, 1, 1)
         self.max_chart_date = date(self.max_read_date.year, 12, 31)
 
-        self.min_chart_year = year_to_decade(self.min_year)
-        self.max_chart_year = year_to_decade(self.max_year) + 10
+    def process(self, max_items_in_year_banding=None):
+        if max_items_in_year_banding is None:
+            # This seems to produce reasonable results
+            max_items_in_year_banding = len(self.books) // 6
 
-    def process(self):
-        time_groups = defaultdict(int)
-        # TODO: this will omit "interval" decades where no books were read
+        time_groups = defaultdict(int) # Could we do this more simply with Counter?
         for bk in self.books:
-            # dec = year_to_decade(bk.year)
             time_groups[bk.year] += 1
 
-        # for k, v in sorted(time_groups.items()):
-        #     print(k,v)
-        # print("Total read books: %d" % (len(self.books)))
-
-        target = len(self.books) // 6
-        self.ranges, self.year_factors = merge_years(time_groups, target)
-        # print(self.ranges)
+        self.ranges, self.year_factors = merge_years(time_groups, max_items_in_year_banding)
         return self
 
     def _calculate_chart_x_scale(self, max_width=200):
-        YEAR_WIDTHS = (4,6,12,24,48,72) # in characters
         num_years = self.max_read_date.year - self.min_read_date.year + 1
         best_year_width = YEAR_WIDTHS[0]
         for yw in YEAR_WIDTHS[1:]:
@@ -117,75 +131,68 @@ class ScatterPlot(object):
             canvas.print_at(x_origin + (i * self.chars_per_year),
                             y_origin, year_label)
             if self.chars_per_year >= 12:
-                for j, month in enumerate(MONTH_LETTERS[1:]):
+                # 48 chars => 4 chars per month has enough space for 3
+                # letter abbreviations, but it looks a bit too busy
+                if self.chars_per_year > 48:
+                    month_list = MONTH_ABBREVIATIONS
+                else:
+                    month_list = MONTH_LETTERS
+                for j, month in enumerate(month_list[1:]):
                     canvas.print_at(x_origin + (i * self.chars_per_year) +
                                     (j * (self.chars_per_year // 12)),
                                     y_origin + 1, month)
 
-    def render(self):
-        self.chars_per_year = self._calculate_chart_x_scale()
-        self.day_scale = self.chars_per_year / 365
+    def _render_publication_date_labels(self, canvas, width, height):
+        for band_number, band in enumerate(self.ranges):
+            canvas.current_fg = Fore.BLUE
+            y_pos = height - \
+                    (band_number * BAND_HEIGHT) - 1
+            canvas.print_at(SPACE_FOR_PUBLICATION_YEAR_LABELS, y_pos,
+                        u'\u2581 ' * (width//2)) # Lower one eighth block
+            canvas.current_fg = Fore.RESET
+
+            if band[0] != band[1]: # a range of years
+                canvas.print_at(0, y_pos - 3, '%s' % (band[0]))
+                canvas.print_at(1, y_pos - 2, 'to')
+                canvas.print_at(0, y_pos - 1, '%s' % (band[1]))
+            else: # a single year (probably won't happen, but cater for it anyway)
+                canvas.print_at(0, y_pos - 2, band[0])
+
+
+    def render(self, colour_function, render_width=None, render_height=None):
+        if render_width is None or render_height is None:
+            x, y = get_terminal_size((80, 40))
+            if render_width is None:
+                render_width = x - SPACE_FOR_PUBLICATION_YEAR_LABELS
+            # For now, keep the band height hard coded as 5 chars
+
+        self.chars_per_year = self._calculate_chart_x_scale(render_width)
+        self.day_scale = self.chars_per_year / 365 # TODO: Account for leap years
         # print("chars per year: %s / day_scale: %s" % (self.chars_per_year,
         #                                               self.day_scale))
 
         #print("Publication years: %s to %s" % (self.min_year, self.max_year))
         #print("Read dates: %s to %s" % (self.min_read_date, self.max_read_date))
-        #print("Publication years: %s to %s" % (self.min_chart_year, self.max_chart_year))
         #print("Read dates: %s to %s" % (self.min_chart_date, self.max_chart_date))
 
-        # X_SCALE = 8
-        SPACE_FOR_PUBLICATION_YEAR_LABELS = 5
-        # CHART_WIDTH = (self.max_chart_date - self.min_chart_date).days // X_SCALE
         CHART_WIDTH = (self.max_chart_date.year - self.min_chart_date.year + 1) * \
                       self.chars_per_year
 
         width = CHART_WIDTH + 2 + SPACE_FOR_PUBLICATION_YEAR_LABELS
-        # height = self.max_chart_year - self.min_chart_year + 2
-
-
-        SPACE_FOR_READ_DATE_LABELS = 2
-
-        BAND_HEIGHT = 5
         height = (len(self.ranges) * BAND_HEIGHT) + SPACE_FOR_READ_DATE_LABELS
 
         cc = ColoramaCanvas(width, height)
         self._render_read_date_labels(cc, SPACE_FOR_PUBLICATION_YEAR_LABELS, 0)
-
-
-        for band_number, band in enumerate(self.ranges):
-            #if band_number % 2 == 0:
-            #    cc.current_bg = Back.BLUE
-            # else:
-            #    cc.current_bg = Back.RESET
-            #for y in range(BAND_HEIGHT):
-            #    y_pos = (band_number* BAND_HEIGHT) + y
-            #    cc.print_at(SPACE_FOR_YEAR_LABELS, y_pos, ' ' * (CHART_WIDTH-5))
-            # cc.current_bg = Back.RESET
-
-            cc.current_fg = Fore.BLUE
-            y_pos = height - \
-                    (band_number * BAND_HEIGHT) - 1
-            cc.print_at(SPACE_FOR_PUBLICATION_YEAR_LABELS, y_pos,
-                        u'\u2581 ' * (CHART_WIDTH//2)) # Lower one eighth block
-            cc.current_fg = Fore.RESET
-
-
-            if band[0] != band[1]:
-                cc.print_at(0, y_pos - 3, '%s' % (band[0]))
-                cc.print_at(1, y_pos - 2, 'to')
-                cc.print_at(0, y_pos - 1, '%s' % (band[1]))
-            else:
-                cc.print_at(0, y_pos - 2, band[0])
+        self._render_publication_date_labels(cc, CHART_WIDTH, height)
 
         for bk in self.books:
-            # x_pos = ((bk.date_read - self.min_chart_date).days // X_SCALE)
             x_pos = int((bk.date_read - self.min_chart_date).days * self.day_scale)
             # y_pos = (self.max_chart_year - bk.year) // 2
             band_number, starting_year, year_range = self.year_factors[bk.year]
             offset_within_band = (bk.year - starting_year) / year_range
             y_pos = height - int((band_number + offset_within_band)* BAND_HEIGHT) -1
 
-            cc.current_fg, cc.current_bg, cc.current_style, txt = rating_to_colours(bk)
+            cc.current_fg, cc.current_bg, cc.current_style, txt = colour_function(bk)
 
             cc.print_at(SPACE_FOR_PUBLICATION_YEAR_LABELS + x_pos, y_pos, txt)
         cc.render()
@@ -197,10 +204,13 @@ def only_books_with_read_date(bk):
     return bk.date_read is not None
 
 if __name__ == '__main__':
-    args = parse_args('Draw a scatter plot of all books read')
+    args = parse_args('Draw a scatter plot of all books read',
+                      'f')
 
     books = read_file(args=args, filter_funcs=[only_read_books,
                                                only_books_with_read_date,
                                                only_books_with_publication_year])
     sp = ScatterPlot(books)
-    sp.process().render()
+    sp.process()
+
+    sp.render(colour_function=rating_to_colours)
