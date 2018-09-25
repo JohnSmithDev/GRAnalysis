@@ -3,10 +3,19 @@
 Date helper functions
 """
 
-MONTH_LETTERS = [None,
-                 'J', 'F', 'M', 'A', 'M', 'J',
-                 'J', 'A', 'S', 'O', 'N', 'D']
-
+#MONTH_LETTERS = [None,'J', 'F', 'M', 'A', 'M', 'J',
+#                 'J', 'A', 'S', 'O', 'N', 'D']
+MONTH_ABBREVIATIONS = [None,
+                       'Jan', 'Feb', 'Mar',
+                       'Apr', 'May', 'Jun',
+                       'Jul', 'Aug', 'Sep',
+                       'Oct', 'Nov', 'Dec']
+def first_char_or_none(txt):
+    try:
+        return txt[0]
+    except TypeError:
+        return None
+MONTH_LETTERS = [first_char_or_none(z) for z in MONTH_ABBREVIATIONS]
 
 def monthstring(y, m, separator='-'): # Is this duplication of code elsewhere?
     return '%04d%s%02d' % (y, separator, m)
