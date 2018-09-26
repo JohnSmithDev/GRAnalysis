@@ -7,6 +7,7 @@ be a better name?
 from __future__ import division
 
 from collections import defaultdict, namedtuple
+from datetime import date
 from functools import cmp_to_key
 
 from utils.display import render_ratings_as_bar
@@ -152,3 +153,53 @@ def get_keys_to_books_dict(books, key_attribute,
             if key or not ignore_undefined_book_groups:
                 ret_dict[key].add(book)
     return ret_dict
+
+
+
+LastReadDetail = namedtuple('LastReadDetails', 'key, days_ago, title, num_unread')
+
+def last_read_detail_comparator(a, b):
+    if a.days_ago == b.days_ago:
+        if a.num_unread == b.num_unread:
+            # return a.key - b.key # blows up on strings
+            return 1 if a.key > b.key else -1
+        else:
+            return b.num_unread - a.num_unread
+    else:
+        return b.days_ago - a.days_ago
+
+def last_read_report(books, key, output_function=print):
+    shelves2books = get_keys_to_books_dict(books, key)
+    data = []
+    today = date.today()
+
+    for key, books in shelves2books.items():
+        read_books = [z for z in books if z.is_read and z.date_read is not None]
+        try:
+            most_recently_read_book = max(read_books, key=lambda z: z.date_read)
+            most_recent_title = most_recently_read_book.title
+            if len(most_recent_title) > 35:
+                most_recent_title = most_recent_title[:32] + '...'
+            days_ago = (today - most_recently_read_book.date_read).days
+        except ValueError:
+            # Presumably no books read
+            most_recent_title = 'N/A'
+            days_ago = 0 # Ugly, but avoids breaking the print formatting below
+
+        unread_books = [z for z in books if z.is_unread]
+        data.append(LastReadDetail(key, days_ago, most_recent_title, len(unread_books)))
+
+    prev_title = prev_days = None
+    for details in sorted(data, key=cmp_to_key(last_read_detail_comparator)):
+        prefix = '%s (%d unread)' % (details.key, details.num_unread)
+        if prev_title == details.title and prev_days == details.days_ago:
+            output_function('%-40s:     "' % (prefix))
+        else:
+            if details.days_ago == 0:
+                suffix = 'No books read'
+            else:
+                suffix = '%3d days ago (%s)' % (details.days_ago, details.title)
+            output_function('%-40s: %s' % (prefix, suffix))
+
+        prev_title = details.title
+        prev_days = details.days_ago
