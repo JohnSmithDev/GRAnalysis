@@ -173,8 +173,9 @@ class LastReadReport(object):
     def __init__(self, books, key):
         self.key2books = get_keys_to_books_dict(books, key)
 
-    def process(self):
-        today = date.today()
+    def process(self, as_of_date=None):
+        if as_of_date is None:
+            as_of_date = date.today()
 
         self.data = []
 
@@ -185,7 +186,7 @@ class LastReadReport(object):
                 most_recent_title = most_recently_read_book.title
                 if len(most_recent_title) > 35:
                     most_recent_title = most_recent_title[:32] + '...'
-                days_ago = (today - most_recently_read_book.date_read).days
+                days_ago = (as_of_date - most_recently_read_book.date_read).days
             except ValueError:
                 # Presumably no books read
                 most_recent_title = 'N/A'
