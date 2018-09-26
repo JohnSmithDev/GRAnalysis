@@ -168,38 +168,45 @@ def last_read_detail_comparator(a, b):
     else:
         return b.days_ago - a.days_ago
 
-def last_read_report(books, key, output_function=print):
-    shelves2books = get_keys_to_books_dict(books, key)
-    data = []
-    today = date.today()
+class LastReadReport(object):
 
-    for key, books in shelves2books.items():
-        read_books = [z for z in books if z.is_read and z.date_read is not None]
-        try:
-            most_recently_read_book = max(read_books, key=lambda z: z.date_read)
-            most_recent_title = most_recently_read_book.title
-            if len(most_recent_title) > 35:
-                most_recent_title = most_recent_title[:32] + '...'
-            days_ago = (today - most_recently_read_book.date_read).days
-        except ValueError:
-            # Presumably no books read
-            most_recent_title = 'N/A'
-            days_ago = 0 # Ugly, but avoids breaking the print formatting below
+    def __init__(self, books, key):
+        self.key2books = get_keys_to_books_dict(books, key)
 
-        unread_books = [z for z in books if z.is_unread]
-        data.append(LastReadDetail(key, days_ago, most_recent_title, len(unread_books)))
+    def process(self):
+        today = date.today()
 
-    prev_title = prev_days = None
-    for details in sorted(data, key=cmp_to_key(last_read_detail_comparator)):
-        prefix = '%s (%d unread)' % (details.key, details.num_unread)
-        if prev_title == details.title and prev_days == details.days_ago:
-            output_function('%-40s:     "' % (prefix))
-        else:
-            if details.days_ago == 0:
-                suffix = 'No books read'
+        self.data = []
+
+        for key, books in self.key2books.items():
+            read_books = [z for z in books if z.is_read and z.date_read is not None]
+            try:
+                most_recently_read_book = max(read_books, key=lambda z: z.date_read)
+                most_recent_title = most_recently_read_book.title
+                if len(most_recent_title) > 35:
+                    most_recent_title = most_recent_title[:32] + '...'
+                days_ago = (today - most_recently_read_book.date_read).days
+            except ValueError:
+                # Presumably no books read
+                most_recent_title = 'N/A'
+                days_ago = 0 # Ugly, but avoids breaking the print formatting below
+
+            unread_books = [z for z in books if z.is_unread]
+            self.data.append(LastReadDetail(key, days_ago, most_recent_title, len(unread_books)))
+        return self
+
+    def render(self, output_function=print):
+        prev_title = prev_days = None
+        for details in sorted(self.data, key=cmp_to_key(last_read_detail_comparator)):
+            prefix = '%s (%d unread)' % (details.key, details.num_unread)
+            if prev_title == details.title and prev_days == details.days_ago:
+                output_function('%-40s:     "' % (prefix))
             else:
-                suffix = '%3d days ago (%s)' % (details.days_ago, details.title)
-            output_function('%-40s: %s' % (prefix, suffix))
+                if details.days_ago == 0:
+                    suffix = 'No books read'
+                else:
+                    suffix = '%3d days ago (%s)' % (details.days_ago, details.title)
+                output_function('%-40s: %s' % (prefix, suffix))
 
-        prev_title = details.title
-        prev_days = details.days_ago
+            prev_title = details.title
+            prev_days = details.days_ago

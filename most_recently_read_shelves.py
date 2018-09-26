@@ -6,9 +6,10 @@ read.
 
 from utils.arguments import parse_args
 from utils.export_reader import read_file
-from utils.transformers import last_read_report
+from utils.transformers import LastReadReport
 
 if __name__ == '__main__':
     args = parse_args('Display when a book from all shelves was most recently read')
     books = read_file(args=args)
-    last_read_report(books, 'user_shelves')
+    lrr = LastReadReport(books, 'user_shelves')
+    lrr.process().render()
