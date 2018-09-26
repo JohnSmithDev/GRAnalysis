@@ -7,7 +7,7 @@ following notable differences:
 * The publication years are flexible so that periods where you have read
   relatively few periods are compressed compared to those where you have read
   a lot.
-* The "dots" for each book indicate the rating you gave it.
+* The "dots" for each book are coloured in some meaningful way
 """
 
 from collections import defaultdict
@@ -18,9 +18,10 @@ from shutil import get_terminal_size
 from utils.arguments import parse_args
 from utils.colorama_canvas import (ColoramaCanvas, Fore, Back, Style,
                                    ColourTextObject)
-from utils.colour_coding import rating_to_colours
+#from utils.colour_coding import rating_to_colours
 from utils.date_related import MONTH_LETTERS, MONTH_ABBREVIATIONS
 from utils.export_reader import read_file, only_read_books
+from utils.timeline_chart import generic_colour_function
 
 SPACE_FOR_PUBLICATION_YEAR_LABELS = 5 # yyyy plus a space
 SPACE_FOR_READ_DATE_LABELS = 2 # lines for year and month
@@ -159,7 +160,8 @@ class ScatterPlot(object):
                 canvas.print_at(0, y_pos - 2, band[0])
 
 
-    def render(self, colour_function, render_width=None, render_height=None):
+    def render(self, colour_function=generic_colour_function,
+               render_width=None, render_height=None):
         if render_width is None or render_height is None:
             x, y = get_terminal_size((80, 40))
             if render_width is None:
@@ -197,20 +199,4 @@ class ScatterPlot(object):
             cc.print_at(SPACE_FOR_PUBLICATION_YEAR_LABELS + x_pos, y_pos, txt)
         cc.render()
 
-def only_books_with_publication_year(bk):
-    return bk.year is not None
 
-def only_books_with_read_date(bk):
-    return bk.date_read is not None
-
-if __name__ == '__main__':
-    args = parse_args('Draw a scatter plot of all books read',
-                      'f')
-
-    books = read_file(args=args, filter_funcs=[only_read_books,
-                                               only_books_with_read_date,
-                                               only_books_with_publication_year])
-    sp = ScatterPlot(books)
-    sp.process()
-
-    sp.render(colour_function=rating_to_colours)
