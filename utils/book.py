@@ -88,7 +88,7 @@ class Book(object):
 
         # Book specific stuff
         self.title = row_dict['Title'].strip()
-        self.author = row_dict['Author'].strip()
+        self.author = re.sub(' +', ' ', row_dict['Author'].strip())
         self._raw_additional_authors = row_dict['Additional Authors']
         # self._raw_additional_authors = row_dict['Bookshelves']
         self.originally_published_year = nullable_int(row_dict['Original Publication Year'])
