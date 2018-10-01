@@ -25,6 +25,7 @@ def valid_date_type(arg_date_str):
 def create_parser(description, supported_args=''):
     parser = ArgumentParser(description=description)
 
+    # Keep these in alphabetical order!
     if 'a' in supported_args:
         parser.add_argument('-a', dest='all_authors', action='store_true',
                             help='Report on all authors, not just the main one')
@@ -48,6 +49,10 @@ def create_parser(description, supported_args=''):
     if 'l' in supported_args:
         parser.add_argument('-l', dest='limit', type=int, nargs='?',
                             help='Limit to N results')
+
+    if 'w' in supported_args:
+        parser.add_argument('-w', dest='width', type=int, nargs='?',
+                            help='Render to specified number of characters wide')
 
 
     parser.add_argument('csv_file', nargs='?',

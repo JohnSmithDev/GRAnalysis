@@ -10,6 +10,8 @@ following notable differences:
 * The "dots" for each book indicate the rating you gave it.
 """
 
+import pdb
+
 from utils.arguments import parse_args
 from utils.colour_coding import rating_to_colours
 from utils.export_reader import read_file, only_read_books
@@ -23,7 +25,7 @@ def only_books_with_read_date(bk):
 
 if __name__ == '__main__':
     args = parse_args('Draw a scatter plot of all books read',
-                      'f')
+                      'fw')
 
     books = read_file(args=args, filter_funcs=[only_read_books,
                                                only_books_with_read_date,
@@ -31,4 +33,4 @@ if __name__ == '__main__':
     sp = ScatterPlot(books)
     sp.process()
 
-    sp.render(colour_function=rating_to_colours)
+    sp.render(colour_function=rating_to_colours, render_width=args.width)
