@@ -83,6 +83,37 @@ configuration file indicating how books on particular shelves or with particular
 properties will be displayed.  (This JSON configuration format is not yet
 documented, but an example file should give sufficient hints to the curious.)
 
+## Including all listed authors
+
+By default, any reports based around authors will only use the single author
+listed in the Author column of the CSV.  Scripts accepting the `-a` flag can
+instead use that author plus those listed in the Additional Authors column.
+
+It should be noted that the Additional Authors data has the following issues
+though, which is why using that data is not the default behaviour:
+
+* Additional authors are often people who just wrote a short introduction to
+  the main text, which probably isn't of interest for most reports.
+* Anthologies often have missing or incomplete contributor lists.
+
+## Output width
+
+Some graphical reports accept a `-w number-of-characters` argument to specify
+how wide (in terms of characters) the output should be.  For such reports, if
+the argument is omitted, then the report will output based on the width of the
+terminal.
+
+## Effective date
+
+Some reports can provide a historical viewpoint on your collection e.g. which
+books did you own at a particular point in time.  This can be specified via
+the `-d yyyy-mm-dd` date argument.
+
+Note that this applies only to explicitly date-oriented information i.e. the
+dates a book was added or read.  For anything else, only the current data is
+used e.g. there is no way of knowing when a book was added to a particular shelf.
+
+
 ## Data interrogation reports
 
 ### avg_page_count.py
@@ -109,7 +140,7 @@ Outputs a list of books ordered by year.
 Arguments accepted:
 
 * `-f filters`
-* -s - Output a blank line between years (this makes the output slightly more readable)
+* `-s` - Output a blank line between years (this makes the output slightly more readable)
 
 ### shelf_intersection.py
 
@@ -147,6 +178,53 @@ future.
 Arguments accepted:
 
 * `-f filters`
+* `-a` - best_ranked_authors.py only
+
+## most_recently_read_shelves.py
+
+![Most recently read example output](images/most_recently_read_shelves.png "Most recently read example")
+
+Although this report is (primarily) about books you have read, the intention is
+that it may help you choose your next book to read e.g. if you haven't read
+a book in a particular genre recently, then perhaps one from that genre might
+be a good choice for your next read.
+
+## timeline_by_*.py
+
+![Timeline example output](images/timeline_by_tbr_time.png "Timeline example")
+
+Draws a time chart showing the books acquired in a particular month, and
+which ones have been read.  There are variant scripts that style the read books
+according to how long they went unread, how they were rated, etc.
+
+Arguments accepted
+
+* `-f filters`
+* `-c colour-configuration-file`
+* `-d date`
+
+## read_scatter_plot_by_rating.py
+
+![Read scatter plot example output](images/read_scatter_plot_by_rating.png "Read scatter plot example")
+
+This is conceptually the same as the one available on the GoodReads site in
+MyBooks > Stats > Publication Year, but with the following differences:
+
+* The vertical scale for publication year varies according to the number of
+  books read from that period.  This is based on the idea that you will be
+  more widely read in some periods than others - for example, many people
+  probably have read a lot more 21st century books than from the 19th century
+  or earlier.
+* The points for each book are styled according to the rating you gave it.
+
+(Obviously the textual nature of this report means that it lacks some of
+the functionality of a web based report, such as the behaviour when hovering
+or clicking on a book.)
+
+Arguments accepted:
+
+* `-f filters`
+* `-w width`
 
 ## Reports on books to be read
 
@@ -165,6 +243,7 @@ Arguments accepted:
 
 * `-f filters`
 * `-c colour-configuration-file`
+* `-d date`
 
 The colour configuration is not yet documented, and requires a fair bit of
 trial-and-error to get ideal results.  I have ideas for how a colour code might
@@ -181,6 +260,11 @@ report shows which shelves/decades/etc in your collection are least read.
 The percentage value is the number of books you have read, the second number
 is the difference between the number read and the number to-read, and the final
 number is the total number of books in this group.
+
+Arguments accepted:
+
+* `-a filters` - least_read_authors.py only
+
 
 ### longest_on_tbr_pile.py
 
