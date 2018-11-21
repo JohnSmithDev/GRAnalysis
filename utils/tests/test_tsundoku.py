@@ -26,13 +26,19 @@ class TestTsundokuCalculateXPositions(unittest.TestCase):
         counts = [tsundoku.Count('a', 10), tsundoku.Count('a', 9),
                   tsundoku.Count('b', 5), tsundoku.Count('b', 5), tsundoku.Count('b', 5),
                   tsundoku.Count('c', 6)]
-        self.assertEquals([3, 4, 2, 1, 0, 5], tsundoku.calculate_x_positions(counts))
+        self.assertEquals([2, 1, # a columns
+                           3, 4, 5, # b columns
+                           0 # c columns
+        ], tsundoku.calculate_x_positions(counts))
 
     def test_calculate_x_positions_with_duplicates_and_offset(self):
         counts = [tsundoku.Count('a', 10), tsundoku.Count('a', 9),
                   tsundoku.Count('b', 5), tsundoku.Count('b', 5), tsundoku.Count('b', 5),
                   tsundoku.Count('c', 6)]
-        self.assertEquals([6, 7, 5, 4, 3, 8], tsundoku.calculate_x_positions(counts, 3))
+        self.assertEquals([5, 4, # a columns
+                           6, 7, 8, # b columns
+                           3 # c columns
+        ], tsundoku.calculate_x_positions(counts, 3))
 
 
 class TestTsundokuSquashCalculation(unittest.TestCase):

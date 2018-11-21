@@ -39,8 +39,14 @@ def calculate_x_positions(count_data, offset=0):
     prev_key = None
 
     temp_positions = []
+    # The on_first_key related code is a cosmetic thing to ensure any 'peak'
+    # in the highest columns is roughly in the centre, rather than on an edge.
+    on_first_key = True
     for k, _  in count_data:
+        print(k, prev_key)
         if k == prev_key:
+            if on_first_key:
+                currently_going_right = not currently_going_right
             if currently_going_right:
                 temp_positions.append(right)
                 right += 1
@@ -48,6 +54,8 @@ def calculate_x_positions(count_data, offset=0):
                 temp_positions.append(left)
                 left -= 1
         else:
+            if prev_key:
+                on_first_key = False
             currently_going_right = not currently_going_right
             if currently_going_right:
                 temp_positions.append(right)
@@ -143,9 +151,9 @@ class Tsundoku(object):
             else:
                 self.unread_shelves[composite_key].add(bk)
 
-    def postprocess(self):
-        self.unread_counts = squash(self.unread_shelves)
-        self.read_counts = squash(self.read_shelves)
+    def postprocess(self, max_height=None):
+        self.unread_counts = squash(self.unread_shelves, max_height=max_height)
+        self.read_counts = squash(self.read_shelves, max_height=max_height)
         self.unread_aggregates = Aggregates(
             max([z.count for z in self.unread_counts]),
             len(self.unread_counts),
