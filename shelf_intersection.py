@@ -32,8 +32,11 @@ if __name__ == '__main__':
 
     for book in read_file(args=args):
         if args.property_names:
-            print('\n'.join(book._properties()))
-            sys.exit(1)
+            try:
+                print('\n'.join(book._properties()))
+                sys.exit(1)
+            except ValueError:
+                continue
         print(book)
         for prop in args.properties:
             try:
