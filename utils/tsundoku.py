@@ -43,7 +43,6 @@ def calculate_x_positions(count_data, offset=0):
     # in the highest columns is roughly in the centre, rather than on an edge.
     on_first_key = True
     for k, _  in count_data:
-        print(k, prev_key)
         if k == prev_key:
             if on_first_key:
                 currently_going_right = not currently_going_right
