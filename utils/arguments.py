@@ -48,12 +48,16 @@ def create_parser(description, supported_args=''):
 
     if 'l' in supported_args:
         parser.add_argument('-l', dest='limit', type=int, nargs='?',
-                            help='Limit to N results')
+                            help='Limit to N results or N characters in a row/column')
 
     if 'w' in supported_args:
         parser.add_argument('-w', dest='width', type=int, nargs='?',
                             help='Render to specified number of characters wide')
 
+    if 's' in supported_args:
+        parser.add_argument('-s', dest='sort_properties',
+                            action='append', default=[],
+                            help='Sort results based on property/properties')
 
     parser.add_argument('csv_file', nargs='?',
                         default=os.environ.get('GR_CSV_FILE'),
@@ -87,6 +91,7 @@ def parse_args(description, supported_args=''):
 
 
     parser = create_parser(description, supported_args)
+
     args = parser.parse_args()
     validate_args(args)
 
