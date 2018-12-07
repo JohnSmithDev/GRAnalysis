@@ -22,7 +22,9 @@ from utils.arguments import create_parser, validate_args
 if __name__ == '__main__':
     parser = create_parser('List all books that are a member of one or more specified shelves, ' +
                       'and not a memmber of any shelves prefixed with ! or ~',
-                      supported_args='f')
+                      supported_args='fs')
+    parser.add_argument('-m', dest='format', nargs='?',
+                        help='Custom output format e.g. "{title} by {author}"')
     parser.add_argument('-p', dest='properties', action='append', default=[],
                         help='List value of property/properties')
     parser.add_argument('-P', dest='property_names', action='store_true',
@@ -30,14 +32,27 @@ if __name__ == '__main__':
     args = parser.parse_args()
     validate_args(args)
 
-    for book in read_file(args=args):
+    books = read_file(args=args)
+    if args.sort_properties:
+        # TODO: support reverse sort (by prefixing prop name with ~?)
+        #       Q: how would be do strings?  Have to go into cmp etc?
+        def custom_sort_key(z):
+            return [getattr(z, prop) for prop in args.sort_properties]
+        # b = sorted(books, key=lambda z: getattr(z, args.sort_properties[0]))
+        b = sorted(books, key=custom_sort_key)
+        books = b
+
+    for book in books:
         if args.property_names:
             try:
                 print('\n'.join(book._properties()))
                 sys.exit(1)
             except ValueError:
                 continue
-        print(book)
+        if args.format:
+            print(book.custom_format(args.format))
+        else:
+            print(book)
         for prop in args.properties:
             try:
                 val = getattr(book, prop)
