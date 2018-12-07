@@ -176,5 +176,11 @@ class TestBook(unittest.TestCase):
         bk = Book(bdict)
         self.assertIsNone(bk.rating)
 
+    def test_custom_format(self):
+        bk = Book(self.MOCK_BOOK)
+        self.assertEqual('AA Mock BookBMick MockC2001D',
+                         bk.custom_format('A{title}B{author}C{year}D'))
+
+
 if __name__ == '__main__':
     unittest.main()

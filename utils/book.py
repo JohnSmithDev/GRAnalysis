@@ -415,8 +415,14 @@ class Book(object):
 
 
     def __repr__(self):
-        # use square parens to make it easier to distinguish from a series
+        # Use square parens to make it easier to distinguish from a series
         # reference in the title
         return "'%s' by %s [%s], %s" % (self.title, self.author, self.year,
                                         self.status)
 
+    def custom_format(self, format):
+        # This rewriting of tokens is ugly, but I don't know a better way
+        # (Can't use .format_map(vars(self)) as that doesn't support calculated
+        #  @properties)
+        fmt = format.replace('{', '{0.')
+        return fmt.format(self)
