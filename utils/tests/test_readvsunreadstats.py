@@ -9,11 +9,13 @@ from ..transformers import ReadVsUnreadStat, compare_rvustat, ReadVsUnreadReport
 
 class TestCompareRVUStat(unittest.TestCase):
 
-    PRIMARY_STAT = ReadVsUnreadStat('Foo', 33, 1)
-    SECONDARY_STAT = ReadVsUnreadStat('Bar', 55, 2)
+    # Since the reworking of the ReadVsUnreadStat class/namedtuple, the following
+    # mock stats are slightly unrealistic.  TODO: redo them to be sensible
+    PRIMARY_STAT = ReadVsUnreadStat('Foo', 33, 4, 1)
+    SECONDARY_STAT = ReadVsUnreadStat('Bar', 55, 5, 3)
 
-    STAT_WITH_SAME_PERCENTAGE = ReadVsUnreadStat('Baz', 33, 3)
-    STAT_WITH_SAME_PERCENTAGE_AND_DIFFERENCE = ReadVsUnreadStat('Boo', 33, 1)
+    STAT_WITH_SAME_PERCENTAGE = ReadVsUnreadStat('Baz', 33, 3, 0)
+    STAT_WITH_SAME_PERCENTAGE_AND_DIFFERENCE = ReadVsUnreadStat('Boo', 33, 4, 1)
 
     def test_compare_unalike_stats(self):
         # smaller percentage comes first

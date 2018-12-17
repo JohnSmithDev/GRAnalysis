@@ -9,7 +9,7 @@ from __future__ import division
 from collections import defaultdict, namedtuple
 from datetime import date
 from functools import cmp_to_key
-
+import math
 from utils.display import render_ratings_as_bar
 
 # TODO (maybe): ReadVsUnreadStats() and best_ranked_report() have different
@@ -20,10 +20,12 @@ from utils.display import render_ratings_as_bar
 #               * For group ranking, only having a single rank is not considered
 #                 sufficient representation to be meaningful
 
-ReadVsUnreadStat = namedtuple('ReadVsUnreadStat', 'key, percentage_read, difference')
+ReadVsUnreadStat = namedtuple('ReadVsUnreadStat', 'key, percentage_read, read_count, unread_count')
 def compare_rvustat(a, b):
     if a.percentage_read == b.percentage_read:
-        diff_difference = abs(b.difference) - abs(a.difference)
+        a_difference = a.read_count - a.unread_count
+        b_difference = b.read_count - b.unread_count
+        diff_difference = abs(b_difference) - abs(a_difference)
         if diff_difference == 0:
             return 1 if a.key > b.key else -1 # Use the key as a last resort
         else:
@@ -59,7 +61,7 @@ class ReadVsUnreadReport(object):
             if self.ignore_single_book_groups and (rd + ur) == 1:
                 continue
             try:
-                stat = ReadVsUnreadStat(key, int(100 * (rd / (rd+ur))) , rd - ur)
+                stat = ReadVsUnreadStat(key, int(100 * (rd / (rd+ur))) , rd, ur)
                 self.stats.append(stat)
             except ZeroDivisionError as err:
                 # Q: Can this actually happen, or am I just being over-paranoid?
@@ -68,8 +70,12 @@ class ReadVsUnreadReport(object):
 
     def render(self, output_function=print):
         for stat in sorted(self.stats, key=cmp_to_key(compare_rvustat)):
-            output_function('%-30s : %5d%% %+3d %3d' % (str(stat[0])[:30], stat[1], stat[2],
-                                             self.grouping_count[stat[0]]))
+            diff = stat.read_count - stat.unread_count
+            output_function('%-30s : %5d%% %+3d %3d' %
+                            (str(stat.key)[:30],
+                             stat.percentage_read,
+                             diff,
+                             self.grouping_count[stat.key]))
 
 
 
@@ -211,3 +217,22 @@ class LastReadReport(object):
 
             prev_title = details.title
             prev_days = details.days_ago
+
+def percentages_report(books, key_attribute, output_function=print):
+    data = get_keys_to_books_dict(books, key_attribute)
+    all_books = set()
+    stats = []
+    max_qty = 0
+    for key, books in data.items():
+        num_books = len(books)
+        stats.append((key, num_books))
+        all_books.update(books)
+        if num_books > max_qty:
+            max_qty = num_books
+    total_books = len(all_books)
+    max_key_length = max([len(str(z)) for z in data.keys()])
+    max_qty_length = math.ceil(math.log(max_qty, 10)) + 1
+
+    fmt = '%%-%ds : %%%dd (%%d%%%%)' % (max_key_length, max_qty_length)
+    for key, qty in sorted(stats, key=lambda z: -z[1]):
+        output_function(fmt % (key, qty, 100 * (qty/total_books)))
