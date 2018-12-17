@@ -116,8 +116,6 @@ class Book(object):
         self.book_id = int(row_dict['Book Id'])
         # BCID?  Seems to be empty
 
-
-
         # Reader specific stuff
         self.status = row_dict['Exclusive Shelf']
         self._raw_shelves = row_dict['Bookshelves']
@@ -312,6 +310,12 @@ class Book(object):
     @property
     def padded_rating_as_stars(self):
         return '%-5s' % (self.rating_as_stars)
+
+    @property
+    def rating_difference_from_average(self):
+        # For me at least, this is pretty useless, given that very few books
+        # have average ratings outside 3.30-4.50ish.
+        return self.rating - self.average_rating
 
     def _calculate_days_on_tbr_pile(self, effective_date):
             if self.was_read_by(effective_date):
