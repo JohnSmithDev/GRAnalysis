@@ -71,7 +71,7 @@ class ReadVsUnreadReport(object):
     def render(self, output_function=print):
         for stat in sorted(self.stats, key=cmp_to_key(compare_rvustat)):
             diff = stat.read_count - stat.unread_count
-            output_function('%-30s : %5d%% %+3d %3d' %
+            output_function('%-30s : %5d%% %+4d %4d' %
                             (str(stat.key)[:30],
                              stat.percentage_read,
                              diff,

@@ -83,9 +83,9 @@ class TestReadVsUnreadReport(unittest.TestCase):
             ret.append(txt)
 
         obj.render(output_function=collate_strings)
-        self.assertEqual(['baz                            :    33%  -1   3',
-                          'foo                            :    66%  +1   3',
-                          'bar                            :   100%  +3   3'],
+        self.assertEqual(['baz                            :    33%   -1    3',
+                          'foo                            :    66%   +1    3',
+                          'bar                            :   100%   +3    3'],
                           ret)
 
 
