@@ -26,6 +26,8 @@ if __name__ == '__main__':
                       supported_args='efs')
     parser.add_argument('-e', dest='enumerate_output', action='store_true',
                         help='Enumerate (i.e. prepend a counter) each book"')
+    parser.add_argument('-i', dest='inline_separator', nargs='?',
+                        help='Output results inline, separated by supplied value"')
     parser.add_argument('-m', dest='format', nargs='?',
                         help='Custom output format e.g. "{title} by {author}"')
     parser.add_argument('-p', dest='properties', action='append', default=[],
@@ -46,20 +48,28 @@ if __name__ == '__main__':
         books = b
         prefix_format = '%%%dd. ' % (math.ceil(math.log(len(books), 10)))
 
+
+    if args.inline_separator:
+        output_bits = []
+        def output_function(txt):
+            output_bits.append(txt)
+    else:
+        output_function = print
+
     prefix = ''
     for i, book in enumerate(books):
         if args.property_names:
             try:
-                print('\n'.join(book._properties()))
+                output_function('\n'.join(book._properties()))
                 sys.exit(1)
             except ValueError:
                 continue
         if args.enumerate_output:
             prefix = prefix_format % (i + 1)
         if args.format:
-            print('%s%s' % (prefix, book.custom_format(args.format)))
+            output_function('%s%s' % (prefix, book.custom_format(args.format)))
         else:
-            print('%s%s' % (prefix, book))
+            output_function('%s%s' % (prefix, book))
         for prop in args.properties:
             try:
                 val = getattr(book, prop)
@@ -67,4 +77,7 @@ if __name__ == '__main__':
                 # Avoid blowing up on stuff like days_on_tbr_pile on unread
                 # books
                 val = 'Error (%s)' % (err)
-            print('  %-20s : %s' % (prop, val))
+            output_function('  %-20s : %s' % (prop, val))
+
+    if args.inline_separator:
+        print(args.inline_separator.join(output_bits))
