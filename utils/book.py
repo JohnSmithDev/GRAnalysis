@@ -430,3 +430,9 @@ class Book(object):
         #  @properties)
         fmt = format.replace('{', '{0.')
         return fmt.format(self)
+
+    @property
+    def markdown(self):
+        # Convenience property to save typing on custom_format() etc
+        return '[%s - %s](%s)' % (self.author, self.clean_title,
+                                  self.goodreads_url)

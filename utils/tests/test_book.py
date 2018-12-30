@@ -62,6 +62,10 @@ class TestBook(unittest.TestCase):
         self.assertEqual((4,),
                          bk.property_as_hashable('rating'))
 
+        self.assertEqual(
+            '[Mick Mock - A Mock Book](https://www.goodreads.com/book/show/12345678)',
+            bk.markdown)
+
     def test_book_in_series_with_comma(self):
         # e.g. Tales From Earthsea (Earthsea Cycle, #5)
         bdict = self.MOCK_BOOK.copy()
