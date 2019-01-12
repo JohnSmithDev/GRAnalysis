@@ -8,6 +8,7 @@ analysis or display functionality.
 """
 
 import math
+import sys
 
 GROUP_SEPARATOR = '---'
 
