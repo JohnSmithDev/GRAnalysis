@@ -18,6 +18,29 @@ located.  Because this is common, and annoying to retype, you can instead set
 the `GR_CSV_FILE` environment variable to the file's location, which will remove
 the need to specify it on each invocation.
 
+
+### Properties
+
+All books have a number of properties (aka attributes) such as author, title
+and rating.  As described below, these can be used for filtering, sorting or
+modifying output in scripts which support that functionality.
+
+To get a list of property names, run
+
+    ./shelf_intersection -P
+
+Not all properties are useful and/or usable in all circumstances.  Ones of
+particuler note are:
+
+* book_id - An internal Goodreads numeric identifier.
+* clean_title - Book title sans any parenthesized series and/or volume number.
+* markdown - the book author and (clean) title with a URL in [Markdown](https://en.wikipedia.org/wiki/Markdown), useful when posting into Reddit or similar
+* padded_rating_as_stars - as "rating_as_stars", but always 5 characters long, so useful for nicer formatting
+* publisher - the publisher, sans any generic prefix/suffix such as "Ltd", "Press" - use raw_publisher if you need the original value from Goodreads
+* rating_as_stars - "rating" is a number from 1 to 5, this is the equivalent from * to *****
+* series, series_and_volume, volume - the information extracted from any parenthesised details.
+
+
 ### Filters
 
 Scripts accepting `-f` filters can optionally filter only books that match
@@ -71,19 +94,19 @@ Note that certain scripts use some built-in filtering that cannot be
 overridden, in order to produce sensible results.  e.g. Anything reporting
 on your particular ratings will filter out books which you have not read.
 
-## Limiting results
+### Limiting results
 
 Scripts accepting a `-l <number>` argument will output no more than the
 specified number of results.
 
-## Colour configuration
+### Colour configuration
 
 Scripts accepting a `-c <colour-config-file>` argument will take a JSON
 configuration file indicating how books on particular shelves or with particular
 properties will be displayed.  (This JSON configuration format is not yet
 documented, but an example file should give sufficient hints to the curious.)
 
-## Including all listed authors
+### Including all listed authors
 
 By default, any reports based around authors will only use the single author
 listed in the Author column of the CSV.  Scripts accepting the `-a` flag can
@@ -96,14 +119,14 @@ though, which is why using that data is not the default behaviour:
   the main text, which probably isn't of interest for most reports.
 * Anthologies often have missing or incomplete contributor lists.
 
-## Output width
+### Output width
 
 Some graphical reports accept a `-w number-of-characters` argument to specify
 how wide (in terms of characters) the output should be.  For such reports, if
 the argument is omitted, then the report will output based on the width of the
 terminal.
 
-## Effective date
+### Effective date
 
 Some reports can provide a historical viewpoint on your collection e.g. which
 books did you own at a particular point in time.  This can be specified via
@@ -113,8 +136,25 @@ Note that this applies only to explicitly date-oriented information i.e. the
 dates a book was added or read.  For anything else, only the current data is
 used e.g. there is no way of knowing when a book was added to a particular shelf.
 
+### Sorting output
+
+Reports which output a list of books may support one or more '-s property_name'
+arguments to sort the output accordingly.
 
 ## Data interrogation reports
+
+### analyse_book_percentages.py
+
+Outputs a list of shelves, showing how many books are on that shelf, and what
+percentage of your collection that shelf works out as.  Because books can be
+on multiple shelves, it is almost certain that these figures will total to be
+more than the number of books your collection or 100% respectively.
+
+![Analyse book percentages example output](images/analyse_book_percentages.png "Analyse book percentages example")
+
+Arguments accepted:
+
+* `-f filters`
 
 ### avg_page_count.py
 
@@ -142,18 +182,43 @@ Arguments accepted:
 * `-f filters`
 * `-s` - Output a blank line between years (this makes the output slightly more readable)
 
+Enhancements made to shelf_intersection.py since this script was first written
+mean that you canreplicate this script's output as follows
+
+    /shelf_intersection.py -m "{year} {padded_rating_as_stars} : '{title}' by {author} [{year}], {status}" -s year
+
 ### shelf_intersection.py
 
-Output a list of books (in arbitrary order) matching the supplied filters
+Output a list of books (in arbitrary order) matching the supplied filters.
 
 ![Shelf intersection example output](images/shelf_intersection.png "Shelf intersection example")
 
 Arguments accepted:
 
 * `-f filters`
+* `-s sort_properties`
+* `-e` - Enumerate output i.e. print 1, 2, 3, 4, etc at the start of each line
+* `-i separator` - Rather than the default of one book per line, output the books inline, separated by given characters
+* `-I separator` - As -i, but line break whenever a sort value changes
+* `-m format` - Use a custom output format, with property names in curly parentheses {}
+* `-p properties` - Also output the values of the specified properties.
+* `-P` - Output a list of supported property names
 
-**Note**: This is an older script that isn't radically different from
-`publication_year.py` as it currently stands.
+
+### year_on_year_by_*.py
+
+Output a table of years (added or read) versus shelves, decade, rating, etc.
+
+![Year on year example output](images/year_on_year.png "Year on year example")
+
+Arguments accepted:
+
+* `-f filters`
+* -p - Display percentages instead of number of books
+* -r - Display by year read (default is to use year added)
+* -t - Display an additional line showing the totals per year
+
+
 
 ## Reports on books read
 
@@ -180,7 +245,7 @@ Arguments accepted:
 * `-f filters`
 * `-a` - best_ranked_authors.py only
 
-## most_recently_read_shelves.py
+### most_recently_read_shelves.py
 
 ![Most recently read example output](images/most_recently_read_shelves.png "Most recently read example")
 
@@ -203,7 +268,7 @@ Arguments accepted
 * `-c colour-configuration-file`
 * `-d date`
 
-## read_scatter_plot_by_rating.py
+### read_scatter_plot_by_rating.py
 
 ![Read scatter plot example output](images/read_scatter_plot_by_rating.png "Read scatter plot example")
 
