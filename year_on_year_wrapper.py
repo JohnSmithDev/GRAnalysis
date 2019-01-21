@@ -38,7 +38,7 @@ if __name__ == '__main__':
     parser.add_argument('-p', dest='do_percentages', action='store_true',
                         help='Display percentages rather than counts')
     parser.add_argument('-r', dest='do_year_read', action='store_true',
-                        help='Display by year read (default is by year added')
+                        help='Display by year read (default is by year added)')
     parser.add_argument('-t', dest='do_totals', action='store_true',
                         help='Also show total books per year')
     args = parser.parse_args()
