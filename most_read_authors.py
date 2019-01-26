@@ -3,7 +3,6 @@
 Show which authors you have read the most.  Replicates the functionality
 removed from the GR site in January 2019, but adds extra stuff such as showing
 the average rating, rating breakdown, filtering, all authors, etc.
-only a single book has been read.
 """
 
 from collections import defaultdict
