@@ -17,4 +17,4 @@ if __name__ == '__main__':
     args = parse_args('Show average rating of decades, with a bar chart breaking down the rankings',
                       supported_args='f')
     books = read_file(args=args, filter_funcs=[only_read_books])
-    best_ranked_report(books, 'decade', sort_by_ranking=False)
+    best_ranked_report(books, 'decade', sort_metric='key')

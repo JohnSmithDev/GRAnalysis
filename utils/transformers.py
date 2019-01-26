@@ -118,15 +118,20 @@ class BestRankedReport(object):
                 self.stats.append(BestRankedStat(k, av, rdr))
         return self # For method chaining
 
-    def render(self, output_function=print, sort_by_ranking=True,
+    def render(self, output_function=print, sort_metric='ranking',
                output_bars=True):
-        if sort_by_ranking:
+        biggest_first = False
+        if sort_metric[0] in ('-', '~', '!'):
+            biggest_first = True
+            sort_metric = sort_metric[1:]
+
+        if sort_metric == 'ranking':
             sorting_key=cmp_to_key(compare_brstat)
         else:
             # Sort by name order
-            sorting_key=lambda z: z.key
+            sorting_key=lambda z: getattr(z, sort_metric)
 
-        for stat in sorted(self.stats, key=sorting_key):
+        for stat in sorted(self.stats, key=sorting_key, reverse=biggest_first):
             # Standard deviation would be good too, to gauge (un)reliability
             if output_bars:
                 bars = ' ' + render_ratings_as_bar(self.rating_groupings[stat.key])
@@ -136,13 +141,14 @@ class BestRankedReport(object):
                                                     stat.number_of_books_rated, bars))
 
 
-def best_ranked_report(books, key_attribute, output_function=print, sort_by_ranking=True,
+def best_ranked_report(books, key_attribute, output_function=print,
+                       sort_metric='ranking',
                        ignore_single_book_groups=False,
                        ignore_undefined_book_groups=True):
     brr = BestRankedReport(books, key_attribute, ignore_single_book_groups,
                            ignore_undefined_book_groups)
     brr.process()
-    brr.render(output_function, sort_by_ranking)
+    brr.render(output_function, sort_metric)
 
 
 
@@ -152,7 +158,6 @@ def get_keys_to_books_dict(books, key_attribute,
     Return a dictionary mapping some keys (e.g. shelves, dictionaries, etc)
     to sets of Books
     """
-
     ret_dict = defaultdict(set)
     for book in books:
         for key in book.property_as_sequence(key_attribute):
