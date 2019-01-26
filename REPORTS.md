@@ -245,6 +245,22 @@ Arguments accepted:
 * `-f filters`
 * `-a` - best_ranked_authors.py only
 
+### most_read_authors.py
+
+Show the authors who you have read the most, along with their average rating
+and breakdown.  Implements the functionality removed from the Goodreads
+website in January 2019.  (In terms of implementation, this is the same as
+`best_ranked_authors.py`, just sorted by number of books read rather than
+average rating.
+
+![Most read example output](images/most_read_authors.png "Most read example")
+
+Arguments accepted:
+
+* `-f filters`
+* `-a` - Show all authors/contributors to a book, not just the primary one
+
+
 ### most_recently_read_shelves.py
 
 ![Most recently read example output](images/most_recently_read_shelves.png "Most recently read example")
