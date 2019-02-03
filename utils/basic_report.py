@@ -7,8 +7,9 @@ It provides basic sorting and grouping of books, but no real aggregation,
 analysis or display functionality.
 """
 
-import math
 import sys
+
+from utils.helpers import generate_enumeration_prefix_format
 
 GROUP_SEPARATOR = '---'
 
@@ -22,10 +23,18 @@ def process_books(books, args, output_function=print):
         # BUG: this blows up if one value is None, e.g. a book without a rating
         b = sorted(books, key=custom_sort_key)
         books = b
-        prefix_format = '%%%dd. ' % (math.ceil(math.log(len(books), 10)))
     else:
         def custom_sort_key(z): # Dummy function to simplify later code
             return None
+        if args.enumerate_output:
+            # Only convert what may be a generator to a len()able object if we
+            # have to
+            b = list(books)
+            books = b
+
+    if args.enumerate_output:
+        prefix_format = generate_enumeration_prefix_format(books)
+
 
     prefix = ''
     prev_sort_value = None
