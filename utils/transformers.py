@@ -111,7 +111,7 @@ class BestRankedReport(object):
                         self.rating_groupings[key][br] += 1
 
     def process(self):
-        # TODO (maybe): Should ingore_single_book_groups be an argument here,
+        # TODO (maybe): Should ignore_single_book_groups be an argument here,
         #               rather than in the constructor?
         self.stats = []
         for k, rdr in self.rated_count.items():
