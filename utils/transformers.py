@@ -149,7 +149,7 @@ class BestRankedReport(object):
                 bars = ' ' + render_ratings_as_bar(self.rating_groupings[stat.key])
             else:
                 bars = ''
-            if prev_rank_value and sorting_key(stat) != prev_rank_value:
+            if prev_rank_value is None or sorting_key(stat) != prev_rank_value:
                 rank_number = i + 1
                 prev_rank_value = sorting_key(stat)
             if enumerate_output:
