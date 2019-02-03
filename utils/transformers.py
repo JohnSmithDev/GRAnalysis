@@ -10,7 +10,9 @@ from collections import defaultdict, namedtuple
 from datetime import date
 from functools import cmp_to_key
 import math
+
 from utils.display import render_ratings_as_bar
+from utils.helpers import generate_enumeration_prefix_format
 
 # TODO (maybe): ReadVsUnreadStats() and best_ranked_report() have different
 #               defaults for ignore_single_book_groups - this could be
@@ -119,36 +121,53 @@ class BestRankedReport(object):
         return self # For method chaining
 
     def render(self, output_function=print, sort_metric='ranking',
-               output_bars=True):
+               output_bars=True, enumerate_output=False):
+        """
+        Strictly speaking, "enumerate_output" is a misnomer, as this outputs
+        a rank number rather than a simple increment.  However they are
+        conceptually similar enough that I think it's simpler to use the same
+        name across all reports, especially from the end user UX point-of-view.
+        """
         biggest_first = False
         if sort_metric[0] in ('-', '~', '!'):
             biggest_first = True
             sort_metric = sort_metric[1:]
 
         if sort_metric == 'ranking':
-            sorting_key=cmp_to_key(compare_brstat)
+            sorting_key = cmp_to_key(compare_brstat)
         else:
             # Sort by name order
-            sorting_key=lambda z: getattr(z, sort_metric)
+            sorting_key = lambda z: getattr(z, sort_metric)
 
-        for stat in sorted(self.stats, key=sorting_key, reverse=biggest_first):
+        prefix = ''
+        rank_number = 1
+        prev_rank_value = None
+        prefix_format = generate_enumeration_prefix_format(self.stats)
+        for i, stat in enumerate(sorted(self.stats, key=sorting_key, reverse=biggest_first)):
             # Standard deviation would be good too, to gauge (un)reliability
             if output_bars:
                 bars = ' ' + render_ratings_as_bar(self.rating_groupings[stat.key])
             else:
                 bars = ''
-            output_function('%-30s : %.2f %4d%s' % (stat.key, stat.average_rating,
-                                                    stat.number_of_books_rated, bars))
+            if prev_rank_value and sorting_key(stat) != prev_rank_value:
+                rank_number = i + 1
+                prev_rank_value = sorting_key(stat)
+            if enumerate_output:
+                prefix = prefix_format % (rank_number)
+            output_function('%s%-30s : %.2f %4d%s' % (prefix,
+                                                      stat.key, stat.average_rating,
+                                                      stat.number_of_books_rated, bars))
 
 
 def best_ranked_report(books, key_attribute, output_function=print,
                        sort_metric='ranking',
                        ignore_single_book_groups=False,
-                       ignore_undefined_book_groups=True):
+                       ignore_undefined_book_groups=True,
+                       enumerate_output=False):
     brr = BestRankedReport(books, key_attribute, ignore_single_book_groups,
                            ignore_undefined_book_groups)
     brr.process()
-    brr.render(output_function, sort_metric)
+    brr.render(output_function, sort_metric, enumerate_output=enumerate_output)
 
 
 

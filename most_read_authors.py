@@ -15,9 +15,12 @@ from utils.transformers import best_ranked_report
 
 if __name__ == '__main__':
     args = parse_args('Show the most read authors, along with rating average and breakdown',
-                      supported_args='af')
+                      supported_args='aef', report_on='author')
+
     books = read_file(args=args, filter_funcs=[only_read_books])
     best_ranked_report(books, 'all_authors' if args.all_authors else 'author',
                        sort_metric='~number_of_books_rated',
-                       ignore_single_book_groups=True)
+                       ignore_single_book_groups=True,
+                       enumerate_output=args.enumerate_output)
+
 
