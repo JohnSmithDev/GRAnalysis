@@ -23,10 +23,8 @@ from utils.export_reader import read_file
 
 if __name__ == '__main__':
     parser = create_parser('List all books matching filters, optionally ordered ' +
-                      'and/or grouped.~',
-                      supported_args='efs')
-    parser.add_argument('-e', dest='enumerate_output', action='store_true',
-                        help='Enumerate (i.e. prepend a counter) each book"')
+                           'and/or grouped.~',
+                           supported_args='efs', report_on='book')
     parser.add_argument('-i', dest='inline_separator', nargs='?',
                         help='Output results inline, separated by supplied value"')
     parser.add_argument('-I', dest='inline_separator_with_breaks', nargs='?',

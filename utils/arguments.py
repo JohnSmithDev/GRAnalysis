@@ -22,7 +22,11 @@ def valid_date_type(arg_date_str):
                                 (arg_date_str))
     return dt
 
-def create_parser(description, supported_args=''):
+def create_parser(description, supported_args='', report_on='item'):
+    '''
+    report_on is text describing what a report focusses on, usually either
+    "book" or "author"
+    '''
     parser = ArgumentParser(description=description)
 
     # Keep these in alphabetical order!
@@ -39,6 +43,10 @@ def create_parser(description, supported_args=''):
         parser.add_argument('-d', dest='date', nargs='?',
                             type=valid_date_type, default=None, required=False,
                             help='Output as if today was specified date')
+
+    if 'e' in supported_args:
+        parser.add_argument('-e', dest='enumerate_output', action='store_true',
+                            help='Enumerate (i.e. prepend a counter to) each %s' % (report_on))
 
     if 'f' in supported_args:
         parser.add_argument('-f', dest='filters',
@@ -76,7 +84,7 @@ def validate_args(args):
     except AttributeError:
         args.colour_cfg = None # Q: Or should be just pass
 
-def parse_args(description, supported_args=''):
+def parse_args(description, supported_args='', report_on='item'):
     """
     Parse, validate and return the arguments.
 
@@ -90,7 +98,7 @@ def parse_args(description, supported_args=''):
     """
 
 
-    parser = create_parser(description, supported_args)
+    parser = create_parser(description, supported_args, report_on=report_on)
 
     args = parser.parse_args()
     validate_args(args)
