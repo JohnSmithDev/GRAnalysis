@@ -63,7 +63,7 @@ class TestBook(unittest.TestCase):
                          bk.property_as_hashable('rating'))
 
         self.assertEqual(
-            '[Mick Mock - A Mock Book](https://www.goodreads.com/book/show/12345678)',
+            'Mick Mock - [A Mock Book](https://www.goodreads.com/book/show/12345678)',
             bk.markdown)
 
     def test_book_in_series_with_comma(self):

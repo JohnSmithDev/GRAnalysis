@@ -434,5 +434,5 @@ class Book(object):
     @property
     def markdown(self):
         # Convenience property to save typing on custom_format() etc
-        return '[%s - %s](%s)' % (self.author, self.clean_title,
+        return '%s - [%s](%s)' % (self.author, self.clean_title,
                                   self.goodreads_url)
