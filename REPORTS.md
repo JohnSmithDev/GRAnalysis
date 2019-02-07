@@ -188,7 +188,7 @@ Arguments accepted:
 * `-s` - Output a blank line between years (this makes the output slightly more readable)
 
 Enhancements made to shelf_intersection.py since this script was first written
-mean that you canreplicate this script's output as follows
+mean that you can replicate this script's output as follows
 
     /shelf_intersection.py -m "{year} {padded_rating_as_stars} : '{title}' by {author} [{year}], {status}" -s year
 
