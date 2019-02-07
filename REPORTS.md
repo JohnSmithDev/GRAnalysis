@@ -99,6 +99,11 @@ on your particular ratings will filter out books which you have not read.
 Scripts accepting a `-l <number>` argument will output no more than the
 specified number of results.
 
+### Enumerating/ranking results
+
+Scripts accepting a '-e' argument will print 1, 2, 3, 4, etc at the start of
+each line, or 1, 2, 2, 4, 4, 4, 7 etc where ranking numbers are more applicable.
+
 ### Colour configuration
 
 Scripts accepting a `-c <colour-config-file>` argument will take a JSON
@@ -195,14 +200,14 @@ Output a list of books (in arbitrary order) matching the supplied filters.
 
 Arguments accepted:
 
+* `-e` - Enumerate books (i.e. prepend 1, 2, 3, etc to each line)
 * `-f filters`
-* `-s sort_properties`
-* `-e` - Enumerate output i.e. print 1, 2, 3, 4, etc at the start of each line
 * `-i separator` - Rather than the default of one book per line, output the books inline, separated by given characters
 * `-I separator` - As -i, but line break whenever a sort value changes
 * `-m format` - Use a custom output format, with property names in curly parentheses {}
 * `-p properties` - Also output the values of the specified properties.
 * `-P` - Output a list of supported property names
+* `-s sort_properties`
 
 
 ### year_on_year_by_*.py
@@ -257,8 +262,9 @@ average rating.
 
 Arguments accepted:
 
-* `-f filters`
 * `-a` - Show all authors/contributors to a book, not just the primary one
+* `-e` - Rank authors (i.e. prepend 1, 2, 2, 4, etc on each line)
+* `-f filters`
 
 
 ### most_recently_read_shelves.py
