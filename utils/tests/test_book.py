@@ -179,6 +179,10 @@ class TestBook(unittest.TestCase):
         bdict['My Rating'] = '0'
         bk = Book(bdict)
         self.assertIsNone(bk.rating)
+        self.assertEqual('', bk.rating_as_stars)
+        self.assertEqual('     ', bk.padded_rating_as_stars)
+        self.assertIsNone(bk.rating_difference_from_average)
+
 
     def test_custom_format(self):
         bk = Book(self.MOCK_BOOK)

@@ -315,7 +315,10 @@ class Book(object):
     def rating_difference_from_average(self):
         # For me at least, this is pretty useless, given that very few books
         # have average ratings outside 3.30-4.50ish.
-        return self.rating - self.average_rating
+        try:
+            return self.rating - self.average_rating
+        except TypeError:
+            return None
 
     def _calculate_days_on_tbr_pile(self, effective_date):
             if self.was_read_by(effective_date):
