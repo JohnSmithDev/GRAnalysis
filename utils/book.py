@@ -82,8 +82,23 @@ def sanitise_publisher(pub):
 class NotOwnedAtSpecifiedDateError(Exception):
     pass
 
+
+META_PATCHABLE_PROPERTIES = ['series', 'volume_number']
+PATCHABLE_PROPERTY_TYPES = {
+    'volume_number': nullable_int,
+    'date_read': date_from_string,
+    'date_added': date_from_string,
+    'year_published': nullable_int,
+    'originally_published_year': nullable_int,
+    'rating': nullable_int,
+    'average_rating': Decimal,
+    'read_count': nullable_int,
+    'pagination': nullable_int
+}
+
+
 class Book(object):
-    def __init__(self, row_dict, as_of_date=None):
+    def __init__(self, row_dict, as_of_date=None, patches=None):
         self._as_of_date = as_of_date
 
         # Book specific stuff
@@ -142,6 +157,13 @@ class Book(object):
                 # fixed
                 self._warn('%s has been read %d times, but no read date (%s)' %
                                 (self.title, self.read_count, self.status))
+
+        # Some internal values that are only ever set when patching
+        self._series = None
+        self._volume_number = None
+        if patches:
+            self.patch(patches)
+
 
     def _warn(self, msg):
         logging.warning(msg)
@@ -215,13 +237,17 @@ class Book(object):
         return series_name
 
     @property
-    def series_and_volume(self):
+    def _series_and_volume(self):
         """
         Return either None (if the book is not in a series) or a tuple of
         (name-of-series, volume[s]).  Note the latter is a string or None, in
         order to be able to cater for compilation volumes e.g. (Earthsea Cycle, #1-4)
         or cases where the volume number is not specified.
+
+        Note that this does not support the patched series and volume values -
+        use the public series and volume_number properties to access those.
         """
+
         strip_trilogy_etc = True # Would we ever not want to strip them?
 
         if self.title.endswith(')'):
@@ -256,7 +282,9 @@ class Book(object):
 
     @property
     def series(self):
-        sv = self.series_and_volume
+        if self._series:
+            return self._series
+        sv = self._series_and_volume
         if sv:
             return sv[0]
         else:
@@ -264,7 +292,9 @@ class Book(object):
 
     @property
     def volume_number(self):
-        sv = self.series_and_volume
+        if self._volume_number:
+            return self._volume_number
+        sv = self._series_and_volume
         if sv and sv[1] is not None:
             return sv[1]
         else:
@@ -420,6 +450,30 @@ class Book(object):
         public_props = [(z, getattr(self, z)) for z in public_prop_names]
         return [z[0] for z in public_props if not hasattr(z[1], '__call__')]
 
+
+    def patch(self, patchset):
+        if not patchset:
+            return 0
+        patches_applied = 0
+        for patch in patchset:
+            matched = True
+            for prop, value in patch[0]:
+                if getattr(self, prop) != value:
+                    matched = False
+                    continue
+            if matched:
+                for prop, value in patch[1]:
+                    logging.error("Patching %s: %s=%s" % (self.title, prop, value))
+                    try:
+                        value = PATCHABLE_PROPERTY_TYPES[prop](value)
+                    except KeyError:
+                        pass # Just use the default str value
+                    if prop in META_PATCHABLE_PROPERTIES:
+                        setattr(self, '_' + prop, value)
+                    else:
+                        setattr(self, prop, value)
+                    patches_applied += 1
+        return patches_applied
 
     def __repr__(self):
         # Use square parens to make it easier to distinguish from a series

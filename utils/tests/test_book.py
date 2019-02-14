@@ -71,7 +71,7 @@ class TestBook(unittest.TestCase):
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'The Cliche of Cliches (Overlong Fantasy Series, #13)'
         bk = Book(bdict)
-        self.assertEqual(('Overlong Fantasy Series', '13'), bk.series_and_volume)
+        self.assertEqual(('Overlong Fantasy Series', '13'), bk._series_and_volume)
         self.assertEqual('Overlong Fantasy Series', bk.series)
         self.assertEqual('13', bk.volume_number)
 
@@ -80,7 +80,7 @@ class TestBook(unittest.TestCase):
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'The Cliche of Cliches (Overlong Fantasy Series #14)'
         bk = Book(bdict)
-        self.assertEqual(('Overlong Fantasy Series', '14'), bk.series_and_volume)
+        self.assertEqual(('Overlong Fantasy Series', '14'), bk._series_and_volume)
         self.assertEqual('Overlong Fantasy Series', bk.series)
         self.assertEqual('14', bk.volume_number)
 
@@ -89,7 +89,7 @@ class TestBook(unittest.TestCase):
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'The Cliche of Cliches (Overlong Fantasy Series 33)'
         bk = Book(bdict)
-        self.assertEqual(('Overlong Fantasy Series', '33'), bk.series_and_volume)
+        self.assertEqual(('Overlong Fantasy Series', '33'), bk._series_and_volume)
         self.assertEqual('Overlong Fantasy Series', bk.series)
         self.assertEqual('33', bk.volume_number)
 
@@ -98,7 +98,7 @@ class TestBook(unittest.TestCase):
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'The Cliche of Cliches (Fantasy Trilogy 3)'
         bk = Book(bdict)
-        self.assertEqual(('Fantasy', '3'), bk.series_and_volume)
+        self.assertEqual(('Fantasy', '3'), bk._series_and_volume)
         self.assertEqual('Fantasy', bk.series)
         self.assertEqual('3', bk.volume_number)
 
@@ -107,7 +107,7 @@ class TestBook(unittest.TestCase):
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'The Cliche of Cliches (Fantasy Trilogy Book 3)'
         bk = Book(bdict)
-        self.assertEqual(('Fantasy', '3'), bk.series_and_volume)
+        self.assertEqual(('Fantasy', '3'), bk._series_and_volume)
         self.assertEqual('Fantasy', bk.series)
         self.assertEqual('3', bk.volume_number)
 
@@ -116,7 +116,7 @@ class TestBook(unittest.TestCase):
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'The Cliche of Cliches (Overlong Fantasy Series #1-3)'
         bk = Book(bdict)
-        self.assertEqual(('Overlong Fantasy Series', '1-3'), bk.series_and_volume)
+        self.assertEqual(('Overlong Fantasy Series', '1-3'), bk._series_and_volume)
         self.assertEqual('Overlong Fantasy Series', bk.series)
         self.assertEqual('1-3', bk.volume_number)
 
@@ -125,7 +125,7 @@ class TestBook(unittest.TestCase):
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'The Cliche of Cliches (Overlong Fantasy Series)'
         bk = Book(bdict)
-        self.assertEqual(('Overlong Fantasy Series', None), bk.series_and_volume)
+        self.assertEqual(('Overlong Fantasy Series', None), bk._series_and_volume)
         self.assertEqual('Overlong Fantasy Series', bk.series)
         self.assertIsNone(bk.volume_number)
 
@@ -134,7 +134,7 @@ class TestBook(unittest.TestCase):
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'Foo (Bar) Baz'
         bk = Book(bdict)
-        self.assertIsNone(bk.series_and_volume)
+        self.assertIsNone(bk._series_and_volume)
         self.assertIsNone(bk.series)
         self.assertIsNone(bk.volume_number)
 
@@ -142,7 +142,7 @@ class TestBook(unittest.TestCase):
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'Foo (The Foo Chronicles, #1)'
         bk = Book(bdict)
-        self.assertEqual(('Foo Chronicles', '1'), bk.series_and_volume)
+        self.assertEqual(('Foo Chronicles', '1'), bk._series_and_volume)
         self.assertEqual('Foo Chronicles', bk.series)
         self.assertEqual('1', bk.volume_number)
 
@@ -183,11 +183,26 @@ class TestBook(unittest.TestCase):
         self.assertEqual('     ', bk.padded_rating_as_stars)
         self.assertIsNone(bk.rating_difference_from_average)
 
-
     def test_custom_format(self):
         bk = Book(self.MOCK_BOOK)
         self.assertEqual('AA Mock BookBMick MockC2001D',
                          bk.custom_format('A{title}B{author}C{year}D'))
+
+    def test_patching(self):
+        patches = [([('title', 'A Mock Book'), ('author', 'Mick Mock')],
+                    [('year_published', '2019')]),
+                   ([('author', 'Mick Mock')],
+                   [('state', 'to-read')]),
+                   ([('title', 'This Will Not Be Applied')],
+                    [('pagination', '999')])]
+        bk = Book(self.MOCK_BOOK, patches=patches)
+        self.assertEqual('to-read', bk.state)
+        self.assertEqual(2019, bk.year_published)
+        # Next value may seem unexpected, but year is a computed property,
+        # taking the min of year_published and originally_published_year
+        self.assertEqual(2001, bk.year)
+
+        self.assertEqual(123, bk.pagination) # And this didn't match, so no patch
 
 
 if __name__ == '__main__':

@@ -12,7 +12,7 @@ import re
 import sys
 
 from utils.book import Book, date_from_string, NotOwnedAtSpecifiedDateError
-
+from utils.patches import load_patches
 
 # Q: Does this affect logging behaviour in other modules?  (I tried setting
 # up a custom logger, but it was ****ing me around, and I couldn't be ****d
@@ -119,6 +119,12 @@ def read_file(filename=None, filter_funcs=None, args=None):
     filtering out certain books.
     """
 
+    patch_paths = os.environ.get('GR_PATCH_PATH')
+    if patch_paths:
+        patch_data = load_patches(patch_paths.split(':'))
+    else:
+        patch_data = None
+
     if args:
         if args.csv_file:
             filename = args.csv_file
@@ -143,7 +149,7 @@ def read_file(filename=None, filter_funcs=None, args=None):
         reader = csv.DictReader(csvfile)
         for line_num, row in enumerate(reader):
             try:
-                bk = Book(row, as_of_date=effective_date)
+                bk = Book(row, as_of_date=effective_date, patches=patch_data)
                 wanted = True
                 if filter_funcs:
                     for fn in filter_funcs:
