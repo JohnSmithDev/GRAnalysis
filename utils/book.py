@@ -46,6 +46,13 @@ def nullable_int(s):
     else:
         return None
 
+def nullable_decimal(s):
+    """Convert a string into an decimal, or None if it is an empty string."""
+    if s:
+        return Decimal(s)
+    else:
+        return None
+
 def strip_prefixes(txt, prefixes):
     if not txt:
         return None
@@ -85,7 +92,7 @@ class NotOwnedAtSpecifiedDateError(Exception):
 
 META_PATCHABLE_PROPERTIES = ['series', 'volume_number']
 PATCHABLE_PROPERTY_TYPES = {
-    'volume_number': nullable_int,
+    # 'volume_number': nullable_decimal, # NO: need to support the likes of "#1-3", so keep as str
     'date_read': date_from_string,
     'date_added': date_from_string,
     'year_published': nullable_int,
@@ -254,7 +261,7 @@ class Book(object):
             series_regex = re.search('\((.*)\)$', self.title)
             if series_regex:
                 all_bits = series_regex.group(1)
-                number_regex = re.search('^(.*[^,]),? (#|Book |Trilogy )([\d\-]+)$', all_bits)
+                number_regex = re.search('^(.*[^,]),? (#|Book |Trilogy )([\d\.\-]+)$', all_bits)
                 if number_regex:
                     # volume_prefix isn't currently used (or useful?)
                     series_name, volume_prefix, volume_number = (number_regex.group(1),
@@ -263,7 +270,7 @@ class Book(object):
                 else:
                     # Try without a volume prefix - can't do this in the prior
                     # regex as the empty value will beat "Book ' etc
-                    number_regex = re.search('^(.*[^,]),? ([\d\-]+)$', all_bits)
+                    number_regex = re.search('^(.*[^,]),? ([\d\.\-]+)$', all_bits)
                     if number_regex:
                         series_name, volume_number = (number_regex.group(1),
                                                       number_regex.group(2))

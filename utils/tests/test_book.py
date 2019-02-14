@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from datetime import date
+from decimal import Decimal
 import unittest
 
 from ..book import Book, NotOwnedAtSpecifiedDateError
@@ -145,6 +146,15 @@ class TestBook(unittest.TestCase):
         self.assertEqual(('Foo Chronicles', '1'), bk._series_and_volume)
         self.assertEqual('Foo Chronicles', bk.series)
         self.assertEqual('1', bk.volume_number)
+
+    def test_book_non_integer_volume_number(self):
+        # e.g. https://www.goodreads.com/book/show/34456370-the-furthest-station
+        bdict = self.MOCK_BOOK.copy()
+        bdict['Title'] = 'Foo (The Foo Chronicles, #3.4)'
+        bk = Book(bdict)
+        self.assertEqual(('Foo Chronicles', '3.4'), bk._series_and_volume)
+        self.assertEqual('Foo Chronicles', bk.series)
+        self.assertEqual('3.4', bk.volume_number)
 
     def test_book_historical_before_added(self):
         before_it_was_added = date(1980, 4, 1)
