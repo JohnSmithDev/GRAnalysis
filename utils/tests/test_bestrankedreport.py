@@ -8,11 +8,11 @@ from ..transformers import BestRankedStat, compare_brstat, BestRankedReport
 
 class TestCompareBRStat(unittest.TestCase):
 
-    PRIMARY_STAT = BestRankedStat('Foo', Decimal('3.1'), 22)
-    SECONDARY_STAT = BestRankedStat('Bar', Decimal('4.2'), 11)
+    PRIMARY_STAT = BestRankedStat('Foo', Decimal('3.1'), 22, 200)
+    SECONDARY_STAT = BestRankedStat('Bar', Decimal('4.2'), 11, 2000)
 
-    STAT_WITH_SAME_AVERAGE = BestRankedStat('Baz', Decimal('3.1'), 15)
-    IDENTICAL_STAT = BestRankedStat('Boo', Decimal('3.1'), 22)
+    STAT_WITH_SAME_AVERAGE = BestRankedStat('Baz', Decimal('3.1'), 15, 80)
+    IDENTICAL_STAT = BestRankedStat('Boo', Decimal('3.1'), 22, 100)
 
     def test_compare_unalike_stats(self):
         # higher average comes first
@@ -27,26 +27,27 @@ class TestCompareBRStat(unittest.TestCase):
 
 
 class MockBookForReadVsUnreadReport(object):
-    def __init__(self, keys, rating):
+    def __init__(self, keys, rating, pagination):
         self.keys = keys
         self.rating = rating
+        self.pagination = pagination
 
     def property_as_sequence(self, whatever):
         for k in self.keys:
             yield k
 
 MOCK_BOOKS = [
-    MockBookForReadVsUnreadReport(['foo'], 4),
-    MockBookForReadVsUnreadReport(['bar'], 3),
-    MockBookForReadVsUnreadReport(['baz'], 2),
+    MockBookForReadVsUnreadReport(['foo'], 4, 100),
+    MockBookForReadVsUnreadReport(['bar'], 3, 128),
+    MockBookForReadVsUnreadReport(['baz'], 2, 160),
 
-    MockBookForReadVsUnreadReport(['foo'], 1),
-    MockBookForReadVsUnreadReport(['bar'], 3),
-    MockBookForReadVsUnreadReport(['baz'], 5),
+    MockBookForReadVsUnreadReport(['foo'], 1, 96),
+    MockBookForReadVsUnreadReport(['bar'], 3, 200),
+    MockBookForReadVsUnreadReport(['baz'], 5, 480),
 
-    MockBookForReadVsUnreadReport(['foo'], None), # e.g. a book which was DNFed
-    MockBookForReadVsUnreadReport(['bar'], 2),
-    MockBookForReadVsUnreadReport(['baz'], 4)
+    MockBookForReadVsUnreadReport(['foo'], None, 329), # e.g. a book which was DNFed
+    MockBookForReadVsUnreadReport(['bar'], 2, 128),
+    MockBookForReadVsUnreadReport(['baz'], 4, 80)
 ]
 
 
@@ -65,9 +66,9 @@ class TestBestRankedReport(unittest.TestCase):
         obj.process()
         # Sort both values tested as the ordering as arbitrary at this point
         self.assertEqual(sorted([
-            BestRankedStat('foo', 2.5, 2),
-            BestRankedStat('bar', 8 / 3, 3),
-            BestRankedStat('baz', 11 / 3, 3),
+            BestRankedStat('foo', 2.5, 2, 196),
+            BestRankedStat('bar', 8 / 3, 3, 456),
+            BestRankedStat('baz', 11 / 3, 3, 720),
             ]), sorted(obj.stats))
 
     def test_render(self):

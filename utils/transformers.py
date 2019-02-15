@@ -9,6 +9,7 @@ from __future__ import division
 from collections import defaultdict, namedtuple
 from datetime import date
 from functools import cmp_to_key
+import logging
 import math
 
 from utils.display import render_ratings_as_bar
@@ -82,8 +83,9 @@ class ReadVsUnreadReport(object):
 
 
 BestRankedStat = namedtuple('BestRankedStat',
-                            'key, average_rating, number_of_books_rated')
+                            'key, average_rating, number_of_books_rated, number_of_pages')
 def compare_brstat(a, b):
+    # TODO (maybe?): number of pages as a further tie-breaker
     if a.average_rating == b.average_rating:
         return b.number_of_books_rated - a.number_of_books_rated
     else:
@@ -96,8 +98,9 @@ class BestRankedReport(object):
                        ignore_undefined_book_groups=True):
         self.ignore_single_book_groups = ignore_single_book_groups
 
-        self.rated_count = defaultdict(int) # TODO: rename as rated_count
+        self.rated_count = defaultdict(int)
         self.cumulative_rating = defaultdict(int)
+        self.page_count = defaultdict(int)
         # TODO (maybe): could/should this be a namedtuple or class?
         self.rating_groupings = defaultdict(lambda: [None, 0,0,0,0,0])
 
@@ -109,6 +112,11 @@ class BestRankedReport(object):
                         self.rated_count[key] += 1
                         self.cumulative_rating[key] += br
                         self.rating_groupings[key][br] += 1
+                        try:
+                            self.page_count[key] += book.pagination
+                        except TypeError as err:
+                            logging.error('No pagimation defined for %s' %
+                                            (book.title))
 
     def process(self):
         # TODO (maybe): Should ignore_single_book_groups be an argument here,
@@ -116,8 +124,9 @@ class BestRankedReport(object):
         self.stats = []
         for k, rdr in self.rated_count.items():
             av = self.cumulative_rating[k] / rdr
+            pg = self.page_count[k]
             if not self.ignore_single_book_groups or rdr > 1:
-                self.stats.append(BestRankedStat(k, av, rdr))
+                self.stats.append(BestRankedStat(k, av, rdr, pg))
         return self # For method chaining
 
     def render(self, output_function=print, sort_metric='ranking',
@@ -154,9 +163,13 @@ class BestRankedReport(object):
                 prev_rank_value = sorting_key(stat)
             if enumerate_output:
                 prefix = prefix_format % (rank_number)
+            if 'number_of_pages' in sort_metric:
+                count_val = stat.number_of_pages
+            else:
+                count_val = stat.number_of_books_rated
             output_function('%s%-30s : %.2f %4d%s' % (prefix,
                                                       stat.key, stat.average_rating,
-                                                      stat.number_of_books_rated, bars))
+                                                      count_val, bars))
 
 
 def best_ranked_report(books, key_attribute, output_function=print,
