@@ -265,6 +265,7 @@ Arguments accepted:
 * `-a` - Show all authors/contributors to a book, not just the primary one
 * `-e` - Rank authors (i.e. prepend 1, 2, 2, 4, etc on each line)
 * `-f filters`
+* `-p` - Rank based on the number of pages read, rather than the number of books
 
 
 ### most_recently_read_shelves.py
