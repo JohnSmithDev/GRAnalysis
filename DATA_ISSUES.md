@@ -83,21 +83,21 @@ A patch file can contain one or more sets of rules - it is up to you to
 organize them in whatever way is most convenient or sensible for you.  The
 format is:
 
-  # An optional comment line that is ignored
-  matchprop1=foo
-  matchprop2=bar
-  matchpropN=zzz
-  ---
-  changeprop1=alpha
-  changeprop2=beta
-  changepropN=omega
-
-  # Blank lines indicate the end of one ruleset and the start of another
-  matchprop1a=qwerty
-  -
-  changeprop1a=zxcvb
-
-  # etc
+    # An optional comment line that is ignored
+    matchprop1=foo
+    matchprop2=bar
+    matchpropN=zzz
+    ---
+    changeprop1=alpha
+    changeprop2=beta
+    changepropN=omega
+    
+    # Blank lines indicate the end of one ruleset and the start of another
+    matchprop1a=qwerty
+    -
+    changeprop1a=zxcvb
+    
+     # etc
 
 The names of the properties that can be matched against or changed can be
 obtained by running `shelf_intersection.py -P`.  Valid values are dependent
