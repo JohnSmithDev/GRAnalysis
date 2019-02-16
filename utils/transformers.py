@@ -115,7 +115,7 @@ class BestRankedReport(object):
                         try:
                             self.page_count[key] += book.pagination
                         except TypeError as err:
-                            logging.error('No pagimation defined for %s' %
+                            logging.error('No pagination defined for %s' %
                                             (book.title))
 
     def process(self):

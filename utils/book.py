@@ -470,7 +470,7 @@ class Book(object):
                     continue
             if matched:
                 for prop, value in patch[1]:
-                    logging.error("Patching %s: %s=%s" % (self.title, prop, value))
+                    logging.debug("Patching %s: %s=%s" % (self.title, prop, value))
                     try:
                         value = PATCHABLE_PROPERTY_TYPES[prop](value)
                     except KeyError:
