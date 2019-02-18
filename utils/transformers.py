@@ -285,6 +285,7 @@ def calculate_average_metric(books, keys_func, metric,
       from it.  Note that these can either be scalar values or iterables,
       in the latter case all values in the iterable will be incremented
       accordingly (e.g. a list of shelves a book is on)
+      IMPORTANT:
     """
     ROGUE_KEY = '*Bad/missing %s*' % (metric)
 
