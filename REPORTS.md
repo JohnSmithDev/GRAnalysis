@@ -161,6 +161,20 @@ Arguments accepted:
 
 * `-f filters`
 
+### average_page_count_by_*.py
+
+Outputs the mean number of pages of particular groupings of books, additionally
+indicating how many books are in that grouping.
+
+![Average page count example output](images/average_page_count.png "Average page count example")
+
+Arguments accepted:
+
+* `-f filters`
+* `-l limit`
+
+These scripts supersede the deprecated `avg_page_count.py` report.
+
 ### avg_page_count.py
 
 Outputs the mean number of pages of particular groupings of books, additionally
@@ -172,9 +186,8 @@ Arguments accepted:
 
 * `-f filters`
 
-**Note**: this script currently reports for multiple groupings - shelves, decades,
-rating, etc.  It is likely this single script will be split up into smaller
-ones each reporting on a single grouping.
+**Note**: this script is now deprecated, and will be removed at some point.
+Use the `average_page_count_by_*.py` scripts instead.
 
 ### publication_year.py
 

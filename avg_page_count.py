@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
 """
 Show average page count for shelves and by decade of publication
+
+This report is deprecated in favour of the individual average_page_count_by_*.py
+scripts.
+
 """
 
 from __future__ import division
 
 from collections import defaultdict
+import logging
+import sys
 # from functools import cmp_to_key
 # from statistics import stdev # Python 3.4+ (apparently)
 
@@ -16,6 +22,7 @@ from utils.transformers import calculate_average_metric
 
 
 if __name__ == '__main__':
+    logging.error('This script is deprecated - use average_page_count_by_*.py instead!')
     args = parse_args('Show average page count for shelves, by decade of publication, and rating',
                       supported_args='f')
 
@@ -41,5 +48,7 @@ if __name__ == '__main__':
             'padded_rating_as_stars', 'pagination', include_missing_pagination=False),
                           key=lambda z: z[0]):
         print('%-30s: %5d (%d)' % (k, v, c))
+
+    sys.exit(1) # Due to deprecation
 
 
