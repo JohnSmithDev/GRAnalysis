@@ -3,19 +3,14 @@
 Show average page count for a particular dimension
 """
 
-# from __future__ import division
-
 from os.path import basename
 import sys
 
 from collections import namedtuple
-# from functools import cmp_to_key
-# from statistics import stdev # Python 3.4+ (apparently)
 
 from utils.export_reader import read_file, only_read_and_rated_books
 from utils.arguments import parse_args
 from utils.transformers import calculate_average_metric
-
 
 def sort_value_by_reverse_pagination(z):
     return -z[1]
