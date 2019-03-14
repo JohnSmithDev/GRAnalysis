@@ -8,7 +8,7 @@ import sys
 
 from collections import namedtuple
 
-from utils.export_reader import read_file, only_read_and_rated_books
+from utils.export_reader import read_file, only_read_and_rated_books, only_read_books
 from utils.arguments import parse_args
 from utils.transformers import calculate_average_metric
 
@@ -32,7 +32,9 @@ PatternConfig = namedtuple('PatternConfig',
 PATTERN_CONFIGS = {
     'shelf': PatternConfig('shelves', [], sort_value_by_reverse_pagination, True),
     'decade': PatternConfig('decade', [], sort_value_by_key, True),
-    'year': PatternConfig('year', [], sort_value_by_integer_key, True),
+    'publication_year': PatternConfig('year', [], sort_value_by_integer_key, True),
+    'year_read': PatternConfig('year_read', [only_read_books],
+                               sort_value_by_integer_key, True),
     'rating': PatternConfig('rating_as_stars', [only_read_and_rated_books],
                             sort_value_by_key, False),
     'author': PatternConfig('author', [], sort_value_by_reverse_pagination, True)
