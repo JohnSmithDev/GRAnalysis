@@ -139,6 +139,28 @@ class TestBook(unittest.TestCase):
         self.assertIsNone(bk.series)
         self.assertIsNone(bk.volume_number)
 
+    def test_book_with_multiple_series(self):
+        # e.g. https://www.goodreads.com/book/show/24997006-dark-state?ac=1&from_search=true
+        # (I don't own this book, so not sure if it actually shows up like this
+        # in the export, but have seen this in some data on other pages)
+        bdict = self.MOCK_BOOK.copy()
+        bdict['Title'] = 'Dark State (Empire Games #2, Merchant Princes Universe #8)'
+        bk = Book(bdict)
+        self.assertEqual(('Empire Games', '2'), bk._series_and_volume)
+        self.assertEqual('Empire Games', bk.series)
+        self.assertEqual('2', bk.volume_number)
+
+    def test_book_with_comma_in_series_name(self):
+        # Not seen a real-life example of this, but I imagine it's possible
+        bdict = self.MOCK_BOOK.copy()
+        bdict['Title'] = 'Foo Bar (I Came, I Saw, I Conquered #3)'
+        bk = Book(bdict)
+        self.assertEqual(('I Came, I Saw, I Conquered', '3'), bk._series_and_volume)
+        self.assertEqual('I Came, I Saw, I Conquered', bk.series)
+        self.assertEqual('3', bk.volume_number)
+
+
+
     def test_book_series_prefix_stripping(self):
         bdict = self.MOCK_BOOK.copy()
         bdict['Title'] = 'Foo (The Foo Chronicles, #1)'

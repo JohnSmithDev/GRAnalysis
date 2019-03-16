@@ -213,7 +213,15 @@ class Book(object):
         strip_trilogy_etc = True # Would we ever not want to strip them?
 
         if self.title.endswith(')'):
-            series_regex = re.search('\((.*)\)$', self.title)
+            if re.search('\d,', self.title):
+                # Clunky hack for multiple series.  TODO: something better
+                title_bits = re.search('^(.*\d),', self.title)
+                title = title_bits.group(1) + ')'
+                # logging.warning('hacked title is now [%s]' % (title))
+            else:
+                title = self.title
+
+            series_regex = re.search('\((.*)\)$', title)
             if series_regex:
                 all_bits = series_regex.group(1)
                 number_regex = re.search('^(.*[^,]),? (#|Book |Trilogy )([\d\.\-]+)$', all_bits)
