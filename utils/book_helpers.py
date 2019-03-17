@@ -66,3 +66,13 @@ def sanitise_publisher(pub):
                                 ' Books', ' UK', ' Press', ' Digital',
                                 ' Publishing', ' Publishers',
                                 ' Publishing Co', ' Publishing Group'))
+
+def clean_title(title):
+    """Remove any parenthesized series from a book title"""
+    # TODO: This will return the wrong thing on a hypothetical title like
+    # 'Was (Not) Was (Volume 1' - use something like the regexes in
+    # .series_and_volume() to do the right thing
+    if title.endswith(')'):
+        return title.split('(')[0].strip()
+    else:
+        return title

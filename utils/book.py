@@ -12,7 +12,8 @@ import re
 
 from utils.book_helpers import (date_from_string, formatted_month,
                                 remove_excess_whitespace, sanitise_publisher,
-                                strip_prefixes, strip_suffixes)
+                                strip_prefixes, strip_suffixes,
+                                clean_title)
 
 
 TODAY = date.today() # Assumption: anything using this lib will never run over multiple days
@@ -171,13 +172,7 @@ class Book(object):
 
     @property
     def clean_title(self):
-        # TODO: This will return the wrong thing on a hypothetical title like
-        # 'Was (Not) Was (Volume 1' - use something like the regexes in
-        # .series_and_volume() to do the right thing
-        if self.title.endswith(')'):
-            return self.title.split('(')[0].strip()
-        else:
-            return self.title
+        return clean_title(self.title)
 
     @staticmethod
     def _strip_trilogy_etc(series_name):
