@@ -76,3 +76,6 @@ def clean_title(title):
         return title.split('(')[0].strip()
     else:
         return title
+
+def goodreads_book_url(book_id):
+    return 'https://www.goodreads.com/book/show/%d' % (book_id)

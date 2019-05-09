@@ -13,7 +13,7 @@ import re
 from utils.book_helpers import (date_from_string, formatted_month,
                                 remove_excess_whitespace, sanitise_publisher,
                                 strip_prefixes, strip_suffixes,
-                                clean_title)
+                                clean_title, goodreads_book_url)
 
 
 TODAY = date.today() # Assumption: anything using this lib will never run over multiple days
@@ -384,7 +384,7 @@ class Book(object):
 
     @property
     def goodreads_url(self):
-        return 'https://www.goodreads.com/book/show/%d' % (self.book_id)
+        return goodreads_book_url(self.book_id)
 
     def property_as_sequence(self, property_name):
         """
