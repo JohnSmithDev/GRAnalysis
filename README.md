@@ -1,4 +1,4 @@
-# GoodReads Analysis - Python tools for analysing CSV exports from GoodReads
+# GR Analysis - Python tools for analysing CSV exports from GoodReads
 
 A set of Python scripts and library code to process
 [GoodReads](https://www.goodreads.com) data and
@@ -24,7 +24,7 @@ GPL v3 - see [LICENCE.txt](licence.txt) for full text.
 
 ## Disclaimers
 
-This project is no affiliation with GoodReads or its associated companies.
+This project hass no affiliation with GoodReads or its associated companies.
 
 This project uses the facility GoodReads provides to export a user's data in
 CSV format.  To the best of my knowledge, GoodReads makes no guarantees about
