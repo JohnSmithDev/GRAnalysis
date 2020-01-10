@@ -52,7 +52,7 @@ def report_stats(books, output_function=print):
 if __name__ == '__main__':
     parser = create_parser('List all books matching filters, optionally ordered ' +
                            'and/or grouped.~',
-                           supported_args='efs', report_on='book')
+                           supported_args='f', report_on='book')
     args = parser.parse_args()
     validate_args(args)
 
