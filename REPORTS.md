@@ -189,6 +189,17 @@ Arguments accepted:
 **Note**: this script is now deprecated, and will be removed at some point.
 Use the `average_page_count_by_*.py` scripts instead.
 
+### new_authors.py
+
+Outputs the number of new (to you) authors that you have read each year, and
+what proportion that is of the number of authors and books you have read.
+
+![New authors example output](images/new_authors.png "New authors example")
+
+Arguments accepted:
+
+* `-f filters`
+
 ### publication_year.py
 
 Outputs a list of books ordered by year.
