@@ -13,14 +13,28 @@ from utils.helpers import generate_enumeration_prefix_format
 
 GROUP_SEPARATOR = '---'
 
+def safe_property(bk, prop_name):
+    """
+    Return the attribute/property value in a form that won't blow up sorted()
+    """
+    NON_NUMERIC_PROPERTIES = {
+        'author': '<Unknown author>',
+        'title': '<Untitled book'
+        # TODO: more I suspect
+    }
+    val = getattr(bk, prop_name)
+    if val is None:
+        return NON_NUMERIC_PROPERTIES.get(prop_name, 0)
+    else:
+        return val
+
 def process_books(books, args, output_function=print):
     prefix_format = '%d. '
     if args.sort_properties:
         # TODO: support reverse sort (by prefixing prop name with ~?)
         #       Q: how would be do strings?  Have to go into cmp etc?
         def custom_sort_key(z):
-            return [getattr(z, prop) for prop in args.sort_properties]
-        # BUG: this blows up if one value is None, e.g. a book without a rating
+            return [safe_property(z, prop) for prop in args.sort_properties]
         b = sorted(books, key=custom_sort_key)
         books = b
     else:
