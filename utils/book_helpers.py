@@ -29,9 +29,18 @@ def formatted_month(dt, separator='-'):
         return '%04d%s%02d' % (dt.year, separator,
                                dt.month)
 
-def remove_excess_whitespace(txt):
-    return re.sub(' +', ' ', txt.strip())
+def remove_excess_whitespace(txt, include_all_whitespace_chars=False):
+    """
+    Set include_all_whitespace_chars to True to include newlines, tabs etc.
+    (That should be irrelevant in the context of the GR CSV export, but is
+    useful for some other projects that import this library.
+    """
+    stuff_to_replace = '\s+' if include_all_whitespace_chars else ' +'
+    return re.sub(stuff_to_replace, ' ', txt.strip())
 
+def eradicate_excess_whitespace(txt):
+    """A more extreme version of eradicate_excess_whitespace"""
+    return remove_excess_whitespace(txt, include_all_whitespace_chars=True)
 
 
 def strip_prefixes(txt, prefixes):
@@ -73,9 +82,12 @@ def clean_title(title):
     # 'Was (Not) Was (Volume 1' - use something like the regexes in
     # .series_and_volume() to do the right thing
     if title.endswith(')'):
-        return title.split('(')[0].strip()
+        no_parens =  title.split('(')[0].strip()
     else:
-        return title
+        no_parens = title
+    if no_parens.endswith(':'): # Seen on a title from a different website
+        no_parens = no_parens[:-1]
+    return no_parens
 
 def goodreads_book_url(book_id):
     return 'https://www.goodreads.com/book/show/%d' % (book_id)
