@@ -41,6 +41,17 @@ def nullable_decimal(s):
     else:
         return None
 
+def clean_isbn(s):
+    """
+    Remove crud from ISBN columns, and replace with None if relevant.  I have
+    no idea why the GR CSV has the crud.
+    """
+    extract_regex = re.match('="(.*)"', s)
+    val = extract_regex.group(1)
+    if len(val) == 0:
+        return None
+    else:
+        return val
 
 class NotOwnedAtSpecifiedDateError(Exception):
     pass
@@ -80,6 +91,9 @@ class Book(object):
             self._warn('%s has original year (%d) later than edition year (%d)' %
                        (self.title, self.originally_published_year,
                         self.year_published))
+
+        self.isbn = clean_isbn(row_dict['ISBN'])
+        self.isbn13 = clean_isbn(row_dict['ISBN13'])
 
         try:
             self.pagination = int(row_dict['Number of Pages'])
