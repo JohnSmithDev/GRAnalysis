@@ -23,6 +23,7 @@ from utils.colorama_canvas import (ColoramaCanvas, Fore, Back, Style)
 from common import get_connection
 from find_book import (find_book_for_author_and_title, BookNotFoundError)
 from tag_related import get_title_tags
+from identifier_related import get_authors_and_title_for_isbn
 # This isn't importable, and doesn't seem to be used anyway?!?!  TODO: remove
 # from title_related import STANDALONE_TITLE_TYPES
 from normalize_author_name import normalize_name
@@ -76,6 +77,12 @@ def output_found_details(book, title_id_tags_map, output_function=print):
 
 
 def check_tags_for_book(conn, book, output_function=print):
+    if book.isbn13:
+        ret = get_authors_and_title_for_isbn(conn, book.isbn13 or book.isbn)
+        print(ret)
+
+
+
     author_guesses = [book.author]
     normalized_author = normalize_name(book.author)
     if normalized_author:
