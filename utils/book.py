@@ -3,7 +3,12 @@
 Book class and associated consts, helper functions etc
 """
 
-from collections import Sequence
+try:
+    from collections import Sequence
+except ImportError:
+    # Moved in Python 3.7
+    # https://github.com/chainer/chainer/issues/5097
+    from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
 import logging
