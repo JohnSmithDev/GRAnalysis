@@ -8,8 +8,8 @@ Opinion: Currently this isn't particularly appealing visually, and the solid
 """
 
 from utils.arguments import parse_args
-from utils.colorama_canvas import (ColoramaCanvas, Fore, Back, Style,
-                                   FG_RAINBOW, ColourTextObject)
+#from utils.colorama_canvas import (ColoramaCanvas, Fore, Back, Style,
+# FG_RAINBOW, ColourTextObject)
 from utils.colour_coding import rating_to_colours
 from utils.export_reader import read_file
 from utils.timeline_chart import TimelineChart
@@ -22,6 +22,3 @@ if __name__ == '__main__':
     books = read_file(args=args)
     tl = TimelineChart(books)
     tl.process().render(colour_function=rating_to_colours)
-
-
-
