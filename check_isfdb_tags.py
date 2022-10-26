@@ -12,12 +12,12 @@ Reguirements:
 
 import logging
 import pdb
-import sys
+# import sys
 
 from utils.arguments import create_parser, validate_args
-from utils.basic_report import process_books, output_grouped_lists
+# from utils.basic_report import process_books, output_grouped_lists
 from utils.export_reader import read_file
-from utils.colorama_canvas import (ColoramaCanvas, Fore, Back, Style)
+from utils.colorama_canvas import Fore
 
 # isfdb_tools
 from common import get_connection
@@ -63,7 +63,7 @@ def output_found_details(book, title_id_tags_map, output_function=print):
                          Fore.RESET
                         ))
         if len(tag_details) > 0:
-            tag_names = set([z.tag_name for z in tag_details])
+            tag_names = {z.tag_name for z in tag_details}
             if tag_names.isdisjoint(CORE_TAGS):
                 output_function('%s%s lacks a core tag: %s%s %s%s %s' %
                                 (Fore.LIGHTYELLOW_EX,
@@ -77,20 +77,23 @@ def output_found_details(book, title_id_tags_map, output_function=print):
 
 
 def check_tags_for_book(conn, book, output_function=print):
+    """
+    For a given book, output the ISFDB tags if it was found in that database.
+
+    Returns True if book was found, else false
+    """
     if book.isbn13:
         ret = get_authors_and_title_for_isbn(conn, book.isbn13 or book.isbn)
-        print(ret)
-
-
+        output_function(ret)
 
     author_guesses = [book.author]
     normalized_author = normalize_name(book.author)
     if normalized_author:
         author_guesses.append(normalized_author)
-        # print(author_guesses)
+        # output_function(author_guesses)
 
     for i, author in enumerate(author_guesses):
-        # print('%d. Trying author %s and title %s' % (i, author, book.clean_title))
+        # output_function('%d. Trying author %s and title %s' % (i, author, book.clean_title))
         try:
             # TODO: better handling of multiple authors, although possibly we
             # won't need it as the ISFDB code should be able to work with just one
@@ -103,7 +106,7 @@ def check_tags_for_book(conn, book, output_function=print):
             )
             title_id_and_tags = {z.title_id: get_title_tags(conn, z.title_id)
                                                     for z in isfdb_id_list}
-            output_found_details(book, title_id_and_tags)
+            output_found_details(book, title_id_and_tags, output_function=output_function)
             return True
 
         except UnicodeEncodeError:
@@ -128,16 +131,15 @@ if __name__ == '__main__':
 
     books = read_file(args=args)
 
-    conn = get_connection()
+    mconn = get_connection()
 
     not_found_count = 0
     total = 0 # books is a generator, so can't do len() on it
-    for book in books:
+    for bk in books:
         total += 1
-        if check_tags_for_book(conn, book):
+        if check_tags_for_book(mconn, bk):
             pass
         else:
             not_found_count += 1
 
     print('%d of %d books not found' % (not_found_count, total))
-
