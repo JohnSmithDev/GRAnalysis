@@ -7,10 +7,7 @@ extra stuff such as showing the average rating, rating breakdown, filtering,
 all contributing authors, etc.
 """
 
-from collections import defaultdict
-from functools import cmp_to_key
-
-from utils.arguments import parse_args, create_parser, validate_args
+from utils.arguments import create_parser, validate_args
 from utils.export_reader import read_file, only_read_books
 from utils.transformers import best_ranked_report
 
@@ -37,5 +34,3 @@ if __name__ == '__main__':
                        sort_metric=sort_metric,
                        ignore_single_book_groups=ignore_singles,
                        enumerate_output=args.enumerate_output)
-
-
