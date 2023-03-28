@@ -18,7 +18,7 @@ TODO:
 
 """
 
-from collections import defaultdict, namedtuple
+from collections import defaultdict, namedtuple, Counter
 import logging
 import pdb
 import sys
@@ -33,22 +33,28 @@ from common import get_connection
 from find_book import (find_book_for_author_and_title, BookNotFoundError)
 from identifier_related import get_authors_and_title_for_isbn
 from title_related import get_all_related_title_ids
-# This isn't importable, and doesn't seem to be used anyway?!?!  TODO: remove
-# from title_related import STANDALONE_TITLE_TYPES
 from normalize_author_name import normalize_name
 from title_contents import (get_title_contents, render_pub, analyse_pub_contents)
 from goodreads_related import (get_ids_from_goodreads_id,)
 
 
-# STANDALONE_TITLE_TYPES is too inclusive
-# e.g.
-# a COLLECTION of Fahrenheit and other novels?
-# a CHAPBOOK of The Midwich Cuckoos?!? http://www.isfdb.org/cgi-bin/title.cgi?172997
-TITLE_TYPES_OF_INTEREST = ['NOVEL']
 
+
+# novel is in theory irrelevant here, but if we have a novel included within
+# an anthology or collection, it'll be useful to know about it
+STORY_TYPES = ('shortfiction', 'novel',
+               'novella', 'novelette', 'short story')
+
+# Hashable* are for use in sets and as dict keys
 HashableStory = namedtuple('HashableStory',
                            'title_id, title, year, ttype')
+HashableAuthor = namedtuple('HashableAuthor',
+                            'author_id, author') # TODO: aliases
 
+# HashableTitles are intended for use on the published titles (anthologies or
+# collections), not the individual short fiction stories
+HashableTitle = namedtuple('HashableTitle',
+                           'title_id, title')
 
 def do_nothing(*args, **kwargs):
     """Stub for functions that take an output_function argument"""
@@ -111,33 +117,48 @@ def check_book_content(conn, book, output_function=print):
 
     return None
 
+
 def process_books(conn, books, output_function=print):
-    by_author = defaultdict(set)
+    """
+    Return two defaultdicts:
+    * Mapping of author to set of stories
+    * Mapping of stories to titles they appear in
+    """
+    by_author = defaultdict(set) # maps author to stories
+
+    story_to_pubs = defaultdict(set) # mnaps HashableStory to ...something...
 
     # not_found_count = 0 # TODO: deprecate/remove
     not_found = []
 
     total = 0 # books is a generator, so can't do len() on it
+    find_method_counts = Counter()
     for book_num, book in enumerate(books):
         total += 1
+        preferred_pub_ids = None
         try:
             pub_title_stuff = get_ids_from_goodreads_id(conn, book.book_id)
             first_entry = pub_title_stuff[0]
             title_id = first_entry['title_id']
             title = first_entry['title_title']
+            preferred_pub_ids = {z['pub_id'] for z in pub_title_stuff}
+            find_method_counts['goodreads_id'] += 1
         except BookNotFoundError:
             title_details = check_book_content(conn, book)
             if not title_details:
                 # not_found_count += 1
                 not_found.append(book)
+                find_method_counts['not_found'] += 1
                 continue
             title_id = title_details.title_id
             try:
                 title = title_details.title
             except AttributeError:
                 title = book.title
+            find_method_counts['via_title'] += 1
 
-        output_function(title_id, title)
+        h_t = HashableTitle(title_id, title)
+        output_function(h_t)
         title_ids = get_all_related_title_ids(conn, title_id,
                                               only_same_languages=True)
         contents = get_title_contents(conn, title_ids)
@@ -146,13 +167,16 @@ def process_books(conn, books, output_function=print):
         # render_pub(best_pub_id, best_contents)
         if best_contents:
             for story in best_contents:
-                for author in story['authors']:
-                    author_key = author.name
+                for author_key in story['authors']:
+                    # TODO: support for pseudonyms
                     h_s = HashableStory(story['title_id'],
                                         story['title_title'],
                                         story['title_date'][:4],
                                         story['title_storylen'] or story['title_ttype'].lower())
                     by_author[author_key].add(h_s)
+                    story_to_pubs[h_s].add(h_t)
+                    # if h_s.title == 'Betrayals':
+                    #    print(f'XXX {book_num}, {book} : {h_s}, {h_t} XXXX')
         else:
             logging.error(f'No contents found for {title}')
 
@@ -160,18 +184,13 @@ def process_books(conn, books, output_function=print):
 
     output_function('%d of %d/%d books not found' % (len(not_found),
                                                      total, book_num))
+    output_function(find_method_counts.most_common())
     for i, book in enumerate(sorted(not_found, key=lambda z: z.title), 1):
-        print('%2d. %s (GR ID= %d / %s)' % (i, book,
+        output_function('%2d. %s (GR ID= %d / %s)' % (i, book,
                                            book.book_id, book.goodreads_url))
 
-    # sys.exit(1)
+    return by_author, story_to_pubs
 
-    return by_author
-
-# novel is in theory irrelevant here, but if we have a novel included within
-# an anthology or collection, it'll be useful to know about it
-STORY_TYPES = ('shortfiction', 'novel',
-               'novella', 'novelette', 'short story')
 
 
 if __name__ == '__main__':
@@ -188,16 +207,32 @@ if __name__ == '__main__':
 
     conn = get_connection()
 
-    by_author = process_books(conn, books)
+    by_author, story_to_pubs = process_books(conn, books)
 
-    for author, works in sorted(by_author.items()):
+    sorted_authors = sorted(by_author.keys(), key=lambda z:z.name)
+
+
+    #for author, works in sorted(by_author.items()):
+    for author in sorted_authors:
+        works = by_author[author]
         stories = [z for z in works if z.ttype in STORY_TYPES]
 
         if stories:
-            print('\n= %s - %d stories =\n' % (author, len(stories)))
+            print('\n= %s (%d) - %d stories =\n' % (author.name, author.id,
+                                                   len(stories)))
             chronological = sorted(stories, key=lambda z: z.year)
             for i, story in enumerate(chronological, 1):
-                print('%3d. %s [%s, %s]' % (i, story.title,
-                                               story.year,
-                                               story.ttype))
+                pubs = ', '.join([z.title for z in story_to_pubs[story]])
+                ac = len(story_to_pubs[story])
+                appearance_count = f'{ac} times'
+                if ac == 1:
+                    appearance_count = 'once'
+                elif ac == 2:
+                    appearance_count = 'twice'
+
+                print('%3d. %s [%s, %s] - appears %s in %s' %
+                      (i, story.title,
+                       story.year,
+                       story.ttype,
+                       appearance_count, pubs))
             print()
