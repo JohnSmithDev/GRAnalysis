@@ -122,11 +122,11 @@ def process_books(conn, books, output_function=print):
     """
     Return two defaultdicts:
     * Mapping of author to set of stories
-    * Mapping of stories to titles they appear in
+    * Mapping of HashableStory to titles they appear in
     """
     by_author = defaultdict(set) # maps author to stories
 
-    story_to_pubs = defaultdict(set) # mnaps HashableStory to ...something...
+    story_to_pubs = defaultdict(set) # maps HashableStory to ...something...
 
     # not_found_count = 0 # TODO: deprecate/remove
     not_found = []
@@ -158,7 +158,7 @@ def process_books(conn, books, output_function=print):
             find_method_counts['via_title'] += 1
 
         h_t = HashableTitle(title_id, title)
-        output_function(h_t)
+        # output_function(h_t)
         title_ids = get_all_related_title_ids(conn, title_id,
                                               only_same_languages=True)
         contents = get_title_contents(conn, title_ids)
@@ -180,7 +180,7 @@ def process_books(conn, books, output_function=print):
         else:
             logging.error(f'No contents found for {title}')
 
-        output_function()
+        #output_function()
 
     output_function('%d of %d/%d books not found' % (len(not_found),
                                                      total, book_num))
@@ -192,6 +192,46 @@ def process_books(conn, books, output_function=print):
     return by_author, story_to_pubs
 
 
+def compare_title_contents_to_owned_stories(conn, title_id, story_to_pubs,
+                                            output_function=print):
+    """
+    Work out which stories in anthology/collection title_id are or are not in story_to_pubs
+
+    TODO: handle title variants (this needs work elsewhere in this script)
+    """
+    known_story_title_ids = {z.title_id for z in story_to_pubs.keys()}
+
+    contents = get_title_contents(conn, [title_id])
+    best_pub_id, best_contents = analyse_pub_contents(contents,
+                                                      output_function=do_nothing)
+    owned_stories = []
+    unowned_stories = []
+    if best_contents:
+        for story in best_contents: # Note we don't iterate through authors, as this can cause dupes
+            s_type = story['title_storylen'] or story['title_ttype'].lower()
+            if s_type not in STORY_TYPES:
+                continue # Ignore essays, coverart, etc
+            if story['title_id'] in known_story_title_ids:
+                owned_stories.append(story)
+            else:
+                unowned_stories.append(story)
+    else:
+        logging.error(f'No contents found for {title}')
+
+
+    def output_story_list(stories):
+        for i, story in enumerate(stories, 1):
+            author_names = [z.name for z in story['authors']]
+            authors_text = ', '.join(author_names)
+            output_function('%2d. "%s" [%s] by %s' % (i, story['title_title'],
+                                                      story['title_date'][:4],
+                                                      authors_text))
+
+    output_function('= Owned stories =\n')
+    output_story_list(owned_stories)
+    output_function('\n= Unowned stories =\n')
+    output_story_list(unowned_stories)
+
 
 if __name__ == '__main__':
     # Something else seems to be messing with logging levels - without setting
@@ -200,6 +240,9 @@ if __name__ == '__main__':
     parser = create_parser('List all books matching filters, optionally ordered ' +
                            'and/or grouped.~',
                            supported_args='efs', report_on='book')
+    parser.add_argument('-t', dest='title_id', nargs='?', type=int, default=None,
+                        help='Compare stories in collection with anthology/collection of given '
+                        'ISFDB title_id')
     args = parser.parse_args()
     validate_args(args)
 
@@ -208,6 +251,14 @@ if __name__ == '__main__':
     conn = get_connection()
 
     by_author, story_to_pubs = process_books(conn, books)
+
+    if args.title_id is not None:
+        # 36607
+        compare_title_contents_to_owned_stories(conn, args.title_id, story_to_pubs)
+        sys.exit(0)
+
+    # compare_title_contents_to_owned_stories(conn, 2373543, story_to_pubs)
+    # compare_title_contents_to_owned_stories(conn, 157779, story_to_pubs)
 
     sorted_authors = sorted(by_author.keys(), key=lambda z:z.name)
 
