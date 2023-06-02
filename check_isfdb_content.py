@@ -31,7 +31,7 @@ from utils.colorama_canvas import (ColoramaCanvas, Fore, Back, Style)
 # isfdb_tools
 from common import get_connection
 from find_book import (find_book_for_author_and_title, BookNotFoundError)
-from identifier_related import get_authors_and_title_for_isbn
+from isfdb_lib.identifier_related import get_authors_and_title_for_isbn
 from title_related import get_all_related_title_ids
 from normalize_author_name import normalize_name
 from title_contents import (get_title_contents, render_pub, analyse_pub_contents)
